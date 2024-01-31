@@ -11,7 +11,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
-from configs import *
+#from configs import *
 
 
 # Streaming call back handler for responses
