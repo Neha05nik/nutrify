@@ -144,12 +144,13 @@ def load_vector_store():
    # Connect to the Vector Store
    #vector_store = AstraDB(
       # embedding=OpenAIEmbeddings(),
-     #  collection_name="my_store",
+     #  collection_name="sc_article_nutrition",
     #   api_endpoint=st.secrets['ASTRA_API_ENDPOINT'],
    #    token=st.secrets['ASTRA_TOKEN']
   # )
     
-    vector_store = AstraDB(embedding=OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY),
+    vector_store = AstraDB(
+    embedding=OpenAIEmbeddings(),
     collection_name="sc_article_nutrition",
     api_endpoint=ASTRA_API_ENDPOINT,
     token=ASTRA_TOKEN)
@@ -218,7 +219,9 @@ if question := st.chat_input("How can I help you today?"):
        'question': lambda x: x['question']
    })
    chain = inputs | prompt | chat_model
+
    response = chain.invoke({'question': question}, config={'callbacks': [StreamHandler(response_placeholder)]})
+   
    answer = response.content
 
 
