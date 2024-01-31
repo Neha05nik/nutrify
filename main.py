@@ -13,6 +13,10 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 #from configs import *
 
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+ASTRA_API_ENDPOINT = st.secrets["ASTRA_API_ENDPOINT"]
+ASTRA_TOKEN = st.secrets["ASTRA_TOKEN"]
+
 
 # Streaming call back handler for responses
 class StreamHandler(BaseCallbackHandler):

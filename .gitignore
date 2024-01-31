@@ -1,4 +1,5 @@
 configs.py
+.streamlit/
 .ipynb_checkpoints
 __pycache__
 env/
