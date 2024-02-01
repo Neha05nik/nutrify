@@ -2,7 +2,6 @@
 import os
 import tempfile
 
-
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import AstraDB
@@ -11,11 +10,16 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
-#from configs import *
 
-OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-ASTRA_API_ENDPOINT = st.secrets["ASTRA_API_ENDPOINT"]
-ASTRA_TOKEN = st.secrets["ASTRA_TOKEN"]
+
+try:
+    OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+    ASTRA_API_ENDPOINT = st.secrets["ASTRA_API_ENDPOINT"]
+    ASTRA_TOKEN = st.secrets["ASTRA_TOKEN"]
+    NCBI_API_KEY = st.secrets["NCBI_API_KEY"]
+except:
+    # For local use
+    from configs import *
 
 
 # Streaming call back handler for responses
@@ -141,13 +145,6 @@ chat_model = load_chat_model()
 # Cache the Astra DB Vector Store for future runs
 @st.cache_resource(show_spinner='Connecting to Astra')
 def load_vector_store():
-   # Connect to the Vector Store
-   #vector_store = AstraDB(
-      # embedding=OpenAIEmbeddings(),
-     #  collection_name="sc_article_nutrition",
-    #   api_endpoint=st.secrets['ASTRA_API_ENDPOINT'],
-   #    token=st.secrets['ASTRA_TOKEN']
-  # )
     
     vector_store = AstraDB(
     embedding=OpenAIEmbeddings(),
@@ -185,8 +182,7 @@ st.markdown("""Your generative AI will guide you in your nutritional choice!""")
 #       uploaded_file = st.file_uploader('Upload a document for additional context', type=['pdf'])
 #       submitted = st.form_submit_button('Save to Astra DB')
 #       if submitted:
-#           vectorize_text(uploaded_file, vector_store)
-           
+#           vectorize_text(uploaded_file, vector_store)           
 
 retriever = load_retriever()
 
@@ -194,23 +190,19 @@ retriever = load_retriever()
 for message in st.session_state.messages:
    st.chat_message(message['role']).markdown(message['content'])
 
-
 # Draw the chat input box
 if question := st.chat_input("How can I help you today?"):
   
    # Store the user's question in a session object for redrawing next time
    st.session_state.messages.append({"role": "human", "content": question})
 
-
    # Draw the user's question
    with st.chat_message('human'):
        st.markdown(question)
 
-
    # UI placeholder to start filling with agent response
    with st.chat_message('assistant'):
        response_placeholder = st.empty()
-
 
    # Generate the answer by calling OpenAI's Chat Model
    # Search for context first
