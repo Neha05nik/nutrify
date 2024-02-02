@@ -104,8 +104,8 @@ def get_articles(query, nb_article):
     # Perform EFetch for abstracts
     articles_informations = perform_efetch_abstracts(publication_ids, web_key, NCBI_API_KEY)
 
-    df = pd.DataFrame(articles_informations, 
-                      columns=['Abstract', 'Title', 'Publication_date', 'Authors', 'Journal', 'DOI'])
+    df = pd.concat([pd.DataFrame(publication_ids, columns=['PmID']), 
+          pd.DataFrame(articles_informations, columns=['Abstract', 'Title', 'Publication_Date', 'Authors', 'Journal', 'DOI'])], axis = 1)
 
     return df
 

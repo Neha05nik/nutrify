@@ -17,22 +17,22 @@ def perform_esearch_ids(query, api_key, sort_by="relevance", retmax=100):
 
     # Parse publication IDs from the XML response
     root = ET.fromstring(esearch_xml)
-    ids = [elem.text for elem in root.findall('.//Id')]
+    pmids = [elem.text for elem in root.findall('.//Id')]
     
     # Parse WebEnv and QueryKey
     web = esearch_xml.split('<WebEnv>')[1].split('</WebEnv>')[0]
 
-    return ids, web
+    return pmids, web
 
 # Function to perform EFetch for abstracts
-def perform_efetch_abstracts(ids, web, api_key, chunk_size=200):
+def perform_efetch_abstracts(pmids, web, api_key, chunk_size=200):
     
     articles_informations = []
     
-    chunk_size = len(ids) if len(ids) > chunk_size else chunk_size
+    chunk_size = len(pmids) if len(pmids) > chunk_size else chunk_size
     
-    for i in range(0, len(ids), chunk_size):
-        current_ids = ids[i:i + chunk_size]
+    for i in range(0, len(pmids), chunk_size):
+        current_ids = pmids[i:i + chunk_size]
         efetch_url = f"{base_url}efetch.fcgi?db={db}&WebEnv={web}&api_key={api_key}"
         efetch_url += f"&retmode=xml&rettype=abstract&id=" + ",".join(current_ids)
 

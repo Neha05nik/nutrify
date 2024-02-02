@@ -1,0 +1,49 @@
+import streamlit as st
+from langchain_community.chat_models.huggingface import ChatHuggingFace
+from langchain_community.llms import HuggingFaceHub
+from mistralai.client import MistralClient
+from langchain_openai import ChatOpenAI
+
+try:
+    OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+    ASTRA_API_ENDPOINT = st.secrets["ASTRA_API_ENDPOINT"]
+    ASTRA_TOKEN = st.secrets["ASTRA_TOKEN"]
+    NCBI_API_KEY = st.secrets["NCBI_API_KEY"]
+    HF_API_KEY = st.secrets["HF_API_KEY"]
+    ASTRA_COLLECTION  =  st.secrets["ASTRA_COLLECTION"]
+    MISTRAL_API_KEY  =  st.secrets["MISTRAL_API_KEY"]
+except:
+    # For local use
+    from configs import *
+
+# Cache OpenAI Chat Model for future runs
+@st.cache_resource()
+def load_chat_model():
+   return ChatOpenAI(
+       openai_api_key=OPENAI_API_KEY,
+       temperature=0.4,
+       model='gpt-3.5-turbo',
+       streaming=True,
+       verbose=True
+   )
+
+# Cache HuggingFace Chat Model for future runs
+@st.cache_resource()
+def load_chat_model_HF():
+   return ChatHuggingFace(llm=HuggingFaceHub(
+    huggingfacehub_api_token=HF_API_KEY, 
+    repo_id="HuggingFaceH4/zephyr-7b-beta", # Name of the repo
+    task="text-generation",
+    model_kwargs={
+        "max_new_tokens": 4096,
+        "top_k": 50,
+        "temperature": 0.4,
+        "repetition_penalty": 1.03,
+    },
+    ), huggingfacehub_api_token=HF_API_KEY)
+#chat_model = load_chat_model_HF()
+
+# Cache Mistral Chat Model for future runs
+@st.cache_resource()
+def load_chat_model_mistral():
+   return MistralClient(api_key=MISTRAL_API_KEY)
