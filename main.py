@@ -20,6 +20,19 @@ except:
      
 engine_AI= st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
 
+answer_AI_type = st.sidebar.radio('**Nutrional_AI persona:**',["Normal", "Scientific", "Nutritional coach"], 
+                        help="""
+                            All answers will be generated with scientific knowledge with the purpose 
+                            to promote better food consumption.  
+
+                            **Normal**: It wants you to eat better.  
+
+                            **Scientific**: It wants you to eat better and with reasoning.  
+
+                            **Nutritional coach**: It is your coach, nothing will satisfy him more than succeeding in having better food decisions.
+                            """
+)
+
 answer_AI = st.sidebar.radio('**Nutrional_AI answers:**',["Short", "Summary", "Long and precise"], 
                         help="""
                             All answers will be generated with scientific knowledge with the purpose 
@@ -43,7 +56,7 @@ if st.sidebar.button("Clear conversation"):
     st.session_state.messages = []
     st.session_state.first_question = False
 
-prompt = load_prompt(answer_AI)
+prompt = load_prompt(answer_AI, answer_AI_type)
 
 # Special prompting for gpt
 if engine_AI == "gpt-3.5-turbo":

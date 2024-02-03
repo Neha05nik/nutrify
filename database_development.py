@@ -215,10 +215,12 @@ st.sidebar.header('Retrieve articles from NCBI database')
 
 # Sidebar for user input
 st.sidebar.header('Article Search')
-word = st.sidebar.text_input('Enter a query MeSH (e.g., "polyphenols")')
+word = st.sidebar.text_input('Enter a query MeSH (e.g., "polyphenols")', 
+                             help="For bulk search of several topic, write [polyphenols,catechin]")
 
 # Checkbox for adding the second query
-add_second_query = st.sidebar.checkbox('Add a second query')
+add_second_query = st.sidebar.checkbox('Add a second query', 
+                             help="For bulk search of several topic, write [cancer,sport]")
 
 # Input for the second query, visible only when the checkbox is selected
 if add_second_query:
@@ -232,18 +234,46 @@ if st.sidebar.button('Search Articles'):
     
     st.session_state.clicked_searched = True
     st.session_state.generated_summary_button = False
-    
+      
     # Construct the query based on user input
-    if add_second_query and 'word2' in locals():
-        query = f'{word}[mesh]+AND+{word2}[mesh]'
-    else:
-        query = f'{word}[mesh]'
- 
-    st.session_state.df_articles = get_articles(query, nb_article)
+    def is_list_words(word_test):
+        return word_test.startswith('[') and word_test.endswith(']')
+    def update_articles(query, nb_article):
+        st.session_state.df_articles = get_articles(query, nb_article)
 
-    st.session_state.df_articles_to_push = pd.concat([st.session_state.df_articles_to_push, 
-                                                      st.session_state.df_articles]
-                                                     ).drop_duplicates(['Abstract'], keep='first')
+        st.session_state.df_articles_to_push = pd.concat([st.session_state.df_articles_to_push, 
+                                                          st.session_state.df_articles]
+                                                         ).drop_duplicates(['Abstract'], keep='first')
+   
+
+        # Construct the query based on user input
+    if add_second_query and 'word2' in locals():
+        if is_list_words(word):
+            list_word = word[1:-1].split(',')
+        else:
+            list_word = [word]
+
+        if is_list_words(word2):
+            list_word2 = word2[1:-1].split(',')
+        else:
+            list_word2 = [word2]
+
+        for w in list_word:
+            for w2 in list_word2:
+                query = f'{w}[mesh]+AND+{w2}[mesh]'
+                update_articles(query, nb_article)
+        # Debugging purpose
+        print(list_word, list_word2)
+
+    else:
+        if is_list_words(word):
+            list_word = word[1:-1].split(',')
+        else:
+            list_word = [word]
+
+        for w in list_word:
+            query = f'{w}[mesh]'
+            update_articles(query, nb_article)
 
 
 if st.session_state.clicked_searched:
@@ -288,9 +318,9 @@ if st.session_state.df_articles_to_push.shape[0] > 0:
             st.session_state.df_articles_to_push = pd.DataFrame()
 
             st.sidebar.text("Articles pushed to AstraDatabase")
-            st.sidebar.text("With embedding:", st.session_state.embedding_type)
+            st.sidebar.write("With embedding:", st.session_state.embedding_type)
 
-            st.session_state.clicked_added = False
+            
         else:
             st.session_state.validated_credential = False
             st.sidebar.text("Please enter values for all keys before pushing to AstraDatabase.")
@@ -304,8 +334,8 @@ if st.session_state.df_articles_to_push.shape[0] > 0:
                 st.session_state.key_3 = st.text_input('Enter ASTRA_API_ENDPOINT', value=st.session_state.key_3)
                 st.session_state.key_4 = st.text_input('Enter ASTRA_TOKEN', value=st.session_state.key_4)
                 #st.session_state.key_5 = st.sidebar.text_input('Enter HF_API_KEY', value=st.session_state.key_5)
-                st.session_state.embedding_type = st.sidebar.selectbox('Select an embedding strategy', 
-                                                                       ('OpenAi', 'all-MiniLM-l6-v2'))
+                st.session_state.embedding_type = st.sidebar.selectbox('**Select an embedding strategy**', 
+                                                                       ('all-MiniLM-l6-v2', 'OpenAi'))
             if st.sidebar.button('Validate credentials'):
                 st.session_state.validated_credential = True
                 st.session_state.clicked_added = False
