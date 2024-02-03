@@ -18,14 +18,30 @@ except:
     # For local use
     from configs import *
      
-engine_AI= st.sidebar.radio('Powered by:',["Mistral-7B-v0.2", "gpt-3.5-turbo"])
+engine_AI= st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
 
-answer_AI = st.sidebar.radio('Nutrional_AI answers:',["Short", "Summary", "Long and precise"])
+answer_AI = st.sidebar.radio('**Nutrional_AI answers:**',["Short", "Summary", "Long and precise"], 
+                        help="""
+                            All answers will be generated with scientific knowledge with the purpose 
+                            to promote better food consumption.  
+
+                            **Short**: The answers will be short and concise.  
+
+                            **Summary**: The answers will be given by bullet points.  
+
+                            **Long and precise**: The answers will be extensive.
+                            """
+)
 
 citing_sources_AI = st.sidebar.checkbox('Cite sources')
 
 if citing_sources_AI:
     nb_article = st.sidebar.slider('Number of articles to cite', min_value=2, max_value=5, value = 2)
+
+if st.sidebar.button("Clear conversation"):
+    # We empty the conversation and restore the questions
+    st.session_state.messages = []
+    st.session_state.first_question = False
 
 prompt = load_prompt(answer_AI)
 
@@ -58,11 +74,9 @@ if 'first_question' not in st.session_state:
 
 example_question = False
 
-
 # Draw a title and some markdown
 st.title("Your personal nutritional AI ")
 st.markdown("""Your generative AI will guide you in your nutritional choice!""")
-
 
 # Include the upload form for new data to be Vectorized
 #with st.sidebar:
@@ -123,7 +137,6 @@ if question := st.chat_input("How can I help you today?", max_chars=250) or exam
 
    # Store the bot's answer in a session object for redrawing next time
    st.session_state.messages.append({"role": "ai", "content": answer})
-
 
    # Write the final answer without the cursor
    response_placeholder.markdown(answer)

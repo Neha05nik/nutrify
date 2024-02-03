@@ -41,12 +41,13 @@ def get_mistral_answer(prompt, chat_model, retriever, question):
         ChatMessage(role="user", content=question)
     ]
 
-    # Chat with Mistral
+    # Chat with Mistral-7B-v0.2
    chat_response = chat_model.chat(
         model="mistral-tiny",
         messages=messages,
         temperature=0.4,
     )
+   # We return the content of the AI response
    return chat_response.choices[0].message.content
 
 # Generate the answer depending of Chat Model

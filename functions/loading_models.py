@@ -6,12 +6,9 @@ from langchain_openai import ChatOpenAI
 
 try:
     OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-    ASTRA_API_ENDPOINT = st.secrets["ASTRA_API_ENDPOINT"]
-    ASTRA_TOKEN = st.secrets["ASTRA_TOKEN"]
-    NCBI_API_KEY = st.secrets["NCBI_API_KEY"]
     HF_API_KEY = st.secrets["HF_API_KEY"]
-    ASTRA_COLLECTION  =  st.secrets["ASTRA_COLLECTION"]
     MISTRAL_API_KEY  =  st.secrets["MISTRAL_API_KEY"]
+
 except:
     # For local use
     from configs import *

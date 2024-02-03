@@ -4,3 +4,6 @@ openai
 tiktoken
 pypdf
 langchain_openai
+langchain_community
+mistralai
+langchain
