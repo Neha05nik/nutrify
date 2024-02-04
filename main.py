@@ -5,12 +5,27 @@ from functions.loading_models import *
 from functions.loading_promp import *
 from functions.loading_vector import *
 from functions.get_answer import *
+from functions.logging import *
+
+from functions.gprd_compliance import run_compliance_modal
+
+# Calling the function to execute the GPRD form
+st.session_state.compliance_statut = run_compliance_modal()
 
 try:
     QRCODE = st.secrets["QRCODE"]
+    S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
 except:
     print("Error loading qr_image")
-     
+
+# Generate a random user number and a variable to keep the conversation
+if "user_id" not in st.session_state:
+    st.session_state.user_id = f"user_{generate_random_number()}"
+    st.session_state.stock_messages = []
+else:
+    st.session_state.user_id = st.session_state.user_id
+    st.session_state.stock_messages = st.session_state.stock_messages
+    
 engine_AI= st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
 
 answer_AI_type = st.sidebar.radio('**Nutrional_AI persona:**',["Normal", "Scientific", "Nutritional coach"], 
@@ -117,6 +132,8 @@ if st.session_state.first_question == False:
 for message in st.session_state.messages:
    st.chat_message(message['role']).markdown(message['content'])
 
+
+
 # Draw the chat input box
 if question := st.chat_input("How can I help you today?", max_chars=250) or example_question:
    
@@ -153,4 +170,13 @@ if question := st.chat_input("How can I help you today?", max_chars=250) or exam
    # Write the final answer without the cursor
    response_placeholder.markdown(answer)
 
-   
+   # If user consent to logging
+   if st.session_state.compliance_statut:
+        # S3 bucket details for logging folder
+        s3_key = f'logs/{st.session_state.user_id}.json'
+
+        append_to_logs(st.session_state.stock_messages, question, answer)
+        
+        upload_to_s3(S3_BUCKET_NAME, s3_key, st.session_state.stock_messages)
+
+   st.rerun()
