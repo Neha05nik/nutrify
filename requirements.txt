@@ -7,3 +7,5 @@ langchain_openai
 langchain_community
 mistralai
 langchain
+streamlit_modal
+boto3
