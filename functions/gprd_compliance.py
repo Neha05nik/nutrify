@@ -24,9 +24,15 @@ def run_compliance_modal():
         st.session_state.compliance_message = True
         with modal.container():
             if st.session_state.compliance_statut:
-                st.success("Thank you for your consent. Your data will be used for model improvement.")
+                st.success("""
+                            **Thank you for your consent.**
+
+                            **Your data will only be used for improving your experience with Nutritional AI.**
+
+                            **It is recommended not to divulge any personal information.**
+                            """)
             else:
-                st.warning("Your data will not be used for model improvement.")
+                st.warning("**Your data won't be used for improving Nutritional AI.**")
 
     if not st.session_state.compliance_button:
         with modal.container():
