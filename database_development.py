@@ -1,19 +1,16 @@
 # Importing libraries
-from importlib import metadata
+#from importlib import metadata
 from NCBI_retriever import perform_esearch_ids, perform_efetch_abstracts
 import streamlit as st
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, OpenAI
 from langchain_community.vectorstores import AstraDB
 from langchain.chains.summarize import load_summarize_chain
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain.prompts import PromptTemplate
 import pandas as pd
 
 # Credit to https://github.com/gkamradt/langchain-tutorials/blob/main/data_generation/ for helping on summerization
-
-# Testing Huggingface 
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
-from langchain_community.llms import HuggingFaceHub
 
 try:
     OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
@@ -129,7 +126,7 @@ def preparation_corpus(df_corpus):
 def load_vector_store(astra_key, astra_token, collection, embedding_type):
 
     # Selection of the embedding
-    # Difference in the dimensions size
+    # Difference in the dimension's size
     if embedding_type == "OpenAi": #1536 dimensions
         embeddings = OpenAIEmbeddings()
     elif embedding_type == "all-MiniLM-l6-v2": #384 dimensions
@@ -154,6 +151,7 @@ def load_summarize_prompt():
     llm = OpenAI(temperature=0.3, 
         openai_api_key=st.session_state.key_1)
     #elif embedding_type == "zephyr-7b-beta":
+        #from langchain_community.llms import HuggingFaceHub
     #    llm = HuggingFaceHub(
      #       huggingfacehub_api_token=HF_API_KEY, 
       #      repo_id="HuggingFaceH4/zephyr-7b-beta", # Name of the repo

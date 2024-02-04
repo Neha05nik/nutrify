@@ -7,16 +7,9 @@ from functions.loading_vector import *
 from functions.get_answer import *
 
 try:
-    OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-    ASTRA_API_ENDPOINT = st.secrets["ASTRA_API_ENDPOINT"]
-    ASTRA_TOKEN = st.secrets["ASTRA_TOKEN"]
-    NCBI_API_KEY = st.secrets["NCBI_API_KEY"]
-    HF_API_KEY = st.secrets["HF_API_KEY"]
-    ASTRA_COLLECTION  =  st.secrets["ASTRA_COLLECTION"]
-    MISTRAL_API_KEY  =  st.secrets["MISTRAL_API_KEY"]
+    QRCODE = st.secrets["QRCODE"]
 except:
-    # For local use
-    from configs import *
+    print("Error loading qr_image")
      
 engine_AI= st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
 
@@ -25,9 +18,9 @@ answer_AI_type = st.sidebar.radio('**Nutrional_AI persona:**',["Normal", "Scient
                             All answers will be generated with scientific knowledge with the purpose 
                             to promote better food consumption.  
 
-                            **Normal**: It wants you to eat better.  
+                            **Normal**: It wants you to eat better foods.  
 
-                            **Scientific**: It wants you to eat better and with reasoning.  
+                            **Scientific**: It wants you to eat better foods and with reasoning.  
 
                             **Nutritional coach**: It is your coach, nothing will satisfy him more than succeeding in having better food decisions.
                             """
@@ -55,6 +48,12 @@ if st.sidebar.button("Clear conversation"):
     # We empty the conversation and restore the questions
     st.session_state.messages = []
     st.session_state.first_question = False
+
+if st.sidebar.button("Donation"):
+    st.sidebar.image(QRCODE, width=200)
+    st.sidebar.markdown("""**If you find value in our service, consider supporting us with a small donation. 
+    Your contribution helps maintain the platform and fuels the development of new features. 
+    We appreciate your generosity – thank you for helping us thrive!**""")
 
 prompt = load_prompt(answer_AI, answer_AI_type)
 
