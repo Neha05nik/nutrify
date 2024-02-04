@@ -7,9 +7,9 @@ from functions.loading_vector import *
 from functions.get_answer import *
 from functions.logging import *
 
-from functions.gprd_compliance import run_compliance_modal
+from functions.gdpr_compliance import run_compliance_modal
 
-# Calling the function to execute the GPRD form
+# Calling the function to execute the GDPR form
 st.session_state.compliance_statut = run_compliance_modal()
 
 try:
