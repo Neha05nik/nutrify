@@ -12,6 +12,13 @@ def upload_to_s3(bucket_name, key, data):
     s3 = boto3.client('s3')
     s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(data))
 
+# Function to upload logs to S3 bucket
+def upload_bug_to_s3(bucket_name, error):
+    s3 = boto3.client('s3')
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    key = f'logs/errors/{timestamp}.json'
+    s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(error))
+
 # Function to append a new question/answer to the logs and the informations on the selected bot
 def append_to_logs(logs, user, chatbot, engine, ai_persona, ai_type_answer):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

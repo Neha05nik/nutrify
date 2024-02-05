@@ -136,54 +136,62 @@ for message in st.session_state.messages:
 
 # Draw the chat input box
 if question := st.chat_input("How can I help you today?", max_chars=250) or example_question:
+   try:
+       if example_question:
+           question = example_question
+
+       st.session_state.first_question = True
    
-   if example_question:
-       question = example_question
+       # Store the user's question in a session object for redrawing next time
+       st.session_state.messages.append({"role": "human", "content": question})
 
-   st.session_state.first_question = True
-   
-   # Store the user's question in a session object for redrawing next time
-   st.session_state.messages.append({"role": "human", "content": question})
+       # Draw the user's question
+       with st.chat_message('human'):
+           st.markdown(question)
 
-   # Draw the user's question
-   with st.chat_message('human'):
-       st.markdown(question)
+       # UI placeholder to start filling with agent response
+       with st.chat_message('assistant'):
+           response_placeholder = st.empty()
 
-   # UI placeholder to start filling with agent response
-   with st.chat_message('assistant'):
-       response_placeholder = st.empty()
+           answer = get_answer(engine_AI, prompt, chat_model, retriever, question, response_placeholder)
 
-       answer = get_answer(engine_AI, prompt, chat_model, retriever, question, response_placeholder)
+       if citing_sources_AI:
+           # We extract the closest data from our database to the question
+           sources = vector_store.similarity_search(question, k=10)
 
-   if citing_sources_AI:
-       # We extract the closest data from our database to the question
-       sources = vector_store.similarity_search(question, k=10)
+           # We extract the pmids from the metadata and eliminate duplicatas
+           pmids = list(set([doc.metadata.get('PmID') for doc in sources]))
 
-       # We extract the pmids from the metadata and eliminate duplicatas
-       pmids = list(set([doc.metadata.get('PmID') for doc in sources]))
-
-       answer += "  \n**You can find more informations in the following articles:**  \n"
+           answer += "  \n**You can find more informations in the following articles:**  \n"
        
-       i = 0
-       for article in pmids:
-           if article and i < nb_article:
-               answer += f"https://pubmed.ncbi.nlm.nih.gov/{article}/  \n"
-               i += 1
+           i = 0
+           for article in pmids:
+               if article and i < nb_article:
+                   answer += f"https://pubmed.ncbi.nlm.nih.gov/{article}/  \n"
+                   i += 1
 
-   # Store the bot's answer in a session object for redrawing next time
-   st.session_state.messages.append({"role": "ai", "content": answer})
+       # Store the bot's answer in a session object for redrawing next time
+       st.session_state.messages.append({"role": "ai", "content": answer})
 
-   # Write the final answer without the cursor
-   response_placeholder.markdown(answer)
+       # Write the final answer without the cursor
+       response_placeholder.markdown(answer)
 
-   # If user consent to logging
-   if st.session_state.compliance_statut:
-        # S3 bucket details for logging folder
-        s3_key = f'logs/{st.session_state.user_id}.json'
+       # If user consent to logging
+       if st.session_state.compliance_statut:
+            # S3 bucket details for logging folder
+            s3_key = f'logs/conversations/{st.session_state.user_id}.json'
 
-        append_to_logs(st.session_state.stock_messages, question, answer, 
-                       engine_AI, answer_AI_persona, answer_AI_type)
+            append_to_logs(st.session_state.stock_messages, question, answer, 
+                           engine_AI, answer_AI_persona, answer_AI_type)
         
-        upload_to_s3(S3_BUCKET_NAME, s3_key, st.session_state.stock_messages)
+            upload_to_s3(S3_BUCKET_NAME, s3_key, st.session_state.stock_messages)
 
-   st.rerun()
+       st.rerun()
+   except Exception as e:
+       # If an error occur
+       st.session_state.messages.append({"role": "ai", "content": st.error("An error was detected, retry with another setup or question. Sorry for the inconvenience")})
+       # Upload error to S3 bucket for further investigation
+       upload_bug_to_s3(S3_BUCKET_NAME, str(e))
+
+       s3_key = f'logs/{st.session_state.user_id}.json'
+

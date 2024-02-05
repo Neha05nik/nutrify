@@ -12,7 +12,7 @@ except:
     from configs import *
 
 # Cache the Astra DB Vector Store for future runs
-@st.cache_resource(show_spinner='Connecting to AstraDB')
+@st.cache_resource(show_spinner='Loading of the database')
 def load_vector_store():
     
     vector_store = AstraDB(
@@ -34,7 +34,7 @@ vector_store = load_vector_store()
 def load_retriever():
    # Get the retriever for the Chat Model
    retriever = vector_store.as_retriever(
-       search_kwargs={"k": 5}
+       search_kwargs={"score_threshold": 0.5, "k": 15}
    )
    return retriever
 
