@@ -156,13 +156,19 @@ if question := st.chat_input("How can I help you today?", max_chars=250) or exam
        answer = get_answer(engine_AI, prompt, chat_model, retriever, question, response_placeholder)
 
    if citing_sources_AI:
-       sources = vector_store.similarity_search(question, k=nb_article)
-       # We extract the pmids from the metadata
-       pmids = [doc.metadata.get('PmID') for doc in sources]
+       # We extract the closest data from our database to the question
+       sources = vector_store.similarity_search(question, k=10)
+
+       # We extract the pmids from the metadata and eliminate duplicatas
+       pmids = list(set([doc.metadata.get('PmID') for doc in sources]))
+
        answer += "  \n**You can find more informations in the following articles:**  \n"
+       
+       i = 0
        for article in pmids:
-           if article:
+           if article and i < nb_article:
                answer += f"https://pubmed.ncbi.nlm.nih.gov/{article}/  \n"
+               i += 1
 
    # Store the bot's answer in a session object for redrawing next time
    st.session_state.messages.append({"role": "ai", "content": answer})
