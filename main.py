@@ -8,6 +8,7 @@ from functions.get_answer import *
 from functions.logging import *
 
 from functions.gdpr_compliance import run_compliance_modal
+from functions.loading_examples_questions import random_questions
 
 # Calling the function to execute the GDPR form
 st.session_state.compliance_statut = run_compliance_modal()
@@ -25,6 +26,12 @@ if "user_id" not in st.session_state:
 else:
     st.session_state.user_id = st.session_state.user_id
     st.session_state.stock_messages = st.session_state.stock_messages
+
+# Generate the example question
+if "random_example_questions" not in st.session_state:
+    st.session_state.random_example_questions = random_questions()
+else:
+    st.session_state.random_example_questions = st.session_state.random_example_questions
     
 engine_AI= st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
 
@@ -57,11 +64,12 @@ answer_AI = st.sidebar.radio('**Nutrional_AI answers:**',["Short", "Summary", "L
 citing_sources_AI = st.sidebar.checkbox('Cite sources')
 
 if citing_sources_AI:
-    nb_article = st.sidebar.slider('Number of articles to cite', min_value=2, max_value=5, value = 2)
+    nb_article = st.sidebar.slider('Number of articles to cite', min_value=2, max_value=5, value = 3)
 
 if st.sidebar.button("Clear conversation"):
     # We empty the conversation and restore the questions
     st.session_state.messages = []
+    st.session_state.random_example_questions = random_questions()
     st.session_state.first_question = False
 
 if st.sidebar.button("Donation"):
@@ -115,23 +123,16 @@ st.markdown("""Your generative AI will guide you in your nutritional choice!""")
 
 # We suggest some simple questions
 if st.session_state.first_question == False:
-    if st.button("What should I eat in the morning?"):
-        example_question = "What should I eat in the morning?"
-        st.session_state.first_question = True
-    if st.button("In which food can I find the most fibers?"):
-        example_question = "In which food can I find the most fibers?"
-        st.session_state.first_question = True
-    if st.button("What should I eat after right after practicing some sport?"):
-        example_question = "What should I eat after right after practicing some sport?"
-        st.session_state.first_question = True
-    if st.button("How can I best prepare for a run tomorrow morning?"):
-        example_question = "How can I best prepare for a run tomorrow morning?"
-        st.session_state.first_question = True
+    for i in range(4):
+        #To create an unique key for each button
+        button_key = f"button_{i}" 
+        if st.button(st.session_state.random_example_questions[i], key=button_key):
+            example_question = st.session_state.random_example_questions[i]
+            st.session_state.first_question = True
 
 # Draw all messages, both user and bot so far (every time the app reruns)
 for message in st.session_state.messages:
    st.chat_message(message['role']).markdown(message['content'])
-
 
 
 # Draw the chat input box
