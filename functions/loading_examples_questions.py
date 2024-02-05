@@ -14,6 +14,6 @@ def random_questions(k_selected=4):
     questions = [sentence.strip() for sentence in questions]
 
     # We randomly choose four sentences
-    selected_questions = random.choices(questions, k=k_selected)
+    selected_questions = random.sample(questions, k=k_selected)
 
     return selected_questions
