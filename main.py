@@ -33,9 +33,9 @@ if "random_example_questions" not in st.session_state:
 else:
     st.session_state.random_example_questions = st.session_state.random_example_questions
     
-engine_AI= st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
+engine_AI = st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
 
-answer_AI_type = st.sidebar.radio('**Nutrional_AI persona:**',["Normal", "Scientific", "Nutritional coach"], 
+answer_AI_persona = st.sidebar.radio('**Nutrional_AI persona:**',["Normal", "Scientific", "Nutritional coach"], 
                         help="""
                             All answers will be generated with scientific knowledge with the purpose 
                             to promote better food consumption.  
@@ -48,7 +48,7 @@ answer_AI_type = st.sidebar.radio('**Nutrional_AI persona:**',["Normal", "Scient
                             """
 )
 
-answer_AI = st.sidebar.radio('**Nutrional_AI answers:**',["Short", "Summary", "Long and precise"], 
+answer_AI_type = st.sidebar.radio('**Nutrional_AI answers:**',["Short", "Summary", "Long and precise"], 
                         help="""
                             All answers will be generated with scientific knowledge with the purpose 
                             to promote better food consumption.  
@@ -78,7 +78,7 @@ if st.sidebar.button("Donation"):
     Your contribution helps maintain the platform and fuels the development of new features. 
     We appreciate your generosity – thank you for helping us thrive!**""")
 
-prompt = load_prompt(answer_AI, answer_AI_type)
+prompt = load_prompt(answer_AI_type, answer_AI_persona)
 
 # Special prompting for gpt
 if engine_AI == "gpt-3.5-turbo":
@@ -134,7 +134,6 @@ if st.session_state.first_question == False:
 for message in st.session_state.messages:
    st.chat_message(message['role']).markdown(message['content'])
 
-
 # Draw the chat input box
 if question := st.chat_input("How can I help you today?", max_chars=250) or example_question:
    
@@ -176,7 +175,8 @@ if question := st.chat_input("How can I help you today?", max_chars=250) or exam
         # S3 bucket details for logging folder
         s3_key = f'logs/{st.session_state.user_id}.json'
 
-        append_to_logs(st.session_state.stock_messages, question, answer)
+        append_to_logs(st.session_state.stock_messages, question, answer, 
+                       engine_AI, answer_AI_persona, answer_AI_type)
         
         upload_to_s3(S3_BUCKET_NAME, s3_key, st.session_state.stock_messages)
 
