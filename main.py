@@ -90,6 +90,7 @@ if engine_AI == "gpt-3.5-turbo":
         {question}
 
         YOUR ANSWER:"""
+    # We have the prompt, then the context and finally the user question
     prompt = ChatPromptTemplate.from_messages([("system", prompt)])
     
     # We load the chatmodel GPT
@@ -97,7 +98,7 @@ if engine_AI == "gpt-3.5-turbo":
 
 elif engine_AI == 'Mistral-7B-v0.2':
     # We load the chatmodel Mistral
-    chat_model = load_chat_model_mistral()
+    chat_model = load_client_mistral()
 
 
 # Start with empty messages, stored in session state
@@ -188,6 +189,7 @@ if question := st.chat_input("How can I help you today?", max_chars=250) or exam
 
        st.rerun()
    except Exception as e:
+       print(e)
        # If an error occur
        st.session_state.messages.append({"role": "ai", "content": st.error("An error was detected, retry with another setup or question. Sorry for the inconvenience")})
        # Upload error to S3 bucket for further investigation

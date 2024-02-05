@@ -34,7 +34,7 @@ vector_store = load_vector_store()
 def load_retriever():
    # Get the retriever for the Chat Model
    retriever = vector_store.as_retriever(
-       search_kwargs={"score_threshold": 0.5, "k": 15}
+       search_kwargs={"score_threshold": 0.5, "k": 10}
    )
    return retriever
 

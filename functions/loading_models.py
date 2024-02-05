@@ -42,5 +42,5 @@ def load_chat_model_HF():
 
 # Cache Mistral Chat Model for future runs
 @st.cache_resource()
-def load_chat_model_mistral():
+def load_client_mistral():
    return MistralClient(api_key=MISTRAL_API_KEY)
