@@ -15,7 +15,7 @@ class StreamHandler(BaseCallbackHandler):
 
 
 # Generate the answer by calling OpenAI's Chat Model
-def get_gpt_answer(prompt, chat_model, retriever, question, response_placeholder):
+def get_gpt_answer(prompt, chat_model, retriever, question, previous_questions, response_placeholder):
     
    # Search for context first
    #inputs = RunnableMap({
@@ -29,12 +29,15 @@ def get_gpt_answer(prompt, chat_model, retriever, question, response_placeholder
    context = retriever.get_relevant_documents(question)
    abstract = str([doc.page_content for doc in context])
 
-   response = chain.invoke({'context':abstract, 'question': question}, config={'callbacks': [StreamHandler(response_placeholder)]})
+   response = chain.invoke({'context':abstract, 
+                            'previous_questions': previous_questions, 
+                            'question': question}, 
+                            config={'callbacks': [StreamHandler(response_placeholder)]})
 
    return response.content
 
 # Generate the answer by calling OpenAI's Chat Model
-def get_mistral_answer(prompt, client_mistral, retriever, question):
+def get_mistral_answer(prompt, client_mistral, retriever, question, previous_questions):
    
    # Retrieve relevant documents from AstraDB as context
    context = retriever.get_relevant_documents(question)
@@ -42,7 +45,7 @@ def get_mistral_answer(prompt, client_mistral, retriever, question):
 
     # Incorporate the prompt with context into the Mistral chat
    messages = [
-        ChatMessage(role="system", content=prompt + abstract),
+        ChatMessage(role="system", content=prompt + abstract + previous_questions),
         ChatMessage(role="user", content=question)
     ]
 
@@ -58,15 +61,15 @@ def get_mistral_answer(prompt, client_mistral, retriever, question):
             yield chunk.choices[0].delta.content
 
 # Generate the answer depending of Chat Model
-def get_answer(engine_AI, prompt, chat_model, retriever, question, response_placeholder):
+def get_answer(engine_AI, prompt, chat_model, retriever, question, previous_questions, response_placeholder):
     if engine_AI == "gpt-3.5-turbo":
-        answer = get_gpt_answer(prompt, chat_model, retriever, question, response_placeholder)
+        answer = get_gpt_answer(prompt, chat_model, retriever, question, previous_questions, response_placeholder)
         return answer
 
     elif engine_AI == 'Mistral-7B-v0.2':
         # To contain the full answer
         response_content = ""
-        for mistral_chunk in get_mistral_answer(prompt, chat_model, retriever, question):
+        for mistral_chunk in get_mistral_answer(prompt, chat_model, retriever, question, previous_questions):
             response_content += mistral_chunk
             
             # Streaming through response_placeholder. Markdown for the text formating.

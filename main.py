@@ -32,6 +32,12 @@ if "random_example_questions" not in st.session_state:
     st.session_state.random_example_questions = random_questions()
 else:
     st.session_state.random_example_questions = st.session_state.random_example_questions
+
+# Keep the previous question in memory
+if "memory_questions" not in st.session_state:
+    st.session_state.memory_questions = ""
+else:
+    st.session_state.memory_questions = st.session_state.memory_questions
     
 engine_AI = st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
 
@@ -60,8 +66,15 @@ answer_AI_type = st.sidebar.radio('**Nutrional_AI answers:**',["Short", "Summary
                             **Long and precise**: The answers will be extensive.
                             """
 )
+memory_AI = st.sidebar.checkbox('Use memory',
+                                help="""
+                                Nutritional AI is keeping your previous questions in memory.
+                                """)
 
-citing_sources_AI = st.sidebar.checkbox('Cite sources')
+citing_sources_AI = st.sidebar.checkbox('Cite sources',
+                                        help="""
+                                        Nutritional AI cites the articles on which the model based its answers
+                                        """)
 
 if citing_sources_AI:
     nb_article = st.sidebar.slider('Number of articles to cite', min_value=2, max_value=5, value = 3)
@@ -85,6 +98,9 @@ if engine_AI == "gpt-3.5-turbo":
     prompt += """
         CONTEXT:
         {context}
+
+        PREVIOUS QUESTION:
+        {previous_questions}
 
         QUESTION:
         {question}
@@ -142,7 +158,16 @@ if question := st.chat_input("How can I help you today?", max_chars=250) or exam
            question = example_question
 
        st.session_state.first_question = True
-   
+       
+       # We store the new question
+       st.session_state.memory_questions += question 
+
+       # We check if "use memory" is checked
+       if memory_AI:
+           previous_questions = st.session_state.memory_questions
+       else:
+           previous_questions = ""
+       
        # Store the user's question in a session object for redrawing next time
        st.session_state.messages.append({"role": "human", "content": question})
 
@@ -154,7 +179,7 @@ if question := st.chat_input("How can I help you today?", max_chars=250) or exam
        with st.chat_message('assistant'):
            response_placeholder = st.empty()
 
-           answer = get_answer(engine_AI, prompt, chat_model, retriever, question, response_placeholder)
+           answer = get_answer(engine_AI, prompt, chat_model, retriever, question, previous_questions, response_placeholder)
 
        if citing_sources_AI:
            # We extract the closest data from our database to the question
