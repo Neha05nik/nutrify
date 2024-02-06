@@ -3,4 +3,4 @@ configs.py
 .ipynb_checkpoints
 __pycache__
 env/
-Developing RAG.ipynb
+*.ipynb

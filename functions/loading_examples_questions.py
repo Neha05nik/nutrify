@@ -8,7 +8,7 @@ def random_questions(k_selected=4):
     """
     print("Current Working Directory:", os.getcwd())
     # We read the examples_questions from the file and store them in a list
-    with open("assets\examples_questions.txt", "r", encoding="utf-8") as file:
+    with open(os.getcwd() + "assets\examples_questions.txt", "r", encoding="utf-8") as file:
         questions = file.readlines()
 
     # Remove newline characters and strip extra whitespaces
