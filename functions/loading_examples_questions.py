@@ -1,11 +1,12 @@
 import random
+import os
 
 def random_questions(k_selected=4):
     """
     Function that randomly pick k_selected questions from the examples_questions.txt file
     Take k_selected, number of questions to return as argument
     """
-
+    print("Current Working Directory:", os.getcwd())
     # We read the examples_questions from the file and store them in a list
     with open("assets\examples_questions.txt", "r", encoding="utf-8") as file:
         questions = file.readlines()
