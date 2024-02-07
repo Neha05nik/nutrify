@@ -15,6 +15,7 @@ st.session_state.compliance_statut = run_compliance_modal()
 
 try:
     QRCODE = st.secrets["QRCODE"]
+    QRCODE_LINK = st.secrets["QRCODE_LINK"]
     S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
 except:
     print("Error loading qr_image")
@@ -87,6 +88,7 @@ if st.sidebar.button("Clear conversation"):
 
 if st.sidebar.button("Donation"):
     st.sidebar.image(QRCODE, width=200)
+    st.sidebar.link_button('Paypal link', url = QRCODE_LINK)
     st.sidebar.markdown("""**If you find value in our service, consider supporting us with a small donation. 
     Your contribution helps maintain the platform and fuels the development of new features. 
     We appreciate your generosity – thank you for helping us thrive!**""")

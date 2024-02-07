@@ -2,6 +2,7 @@ import streamlit as st
 from streamlit_modal import Modal
 
 def run_compliance_modal():
+
     # Initialize session state
     if 'compliance_button' not in st.session_state:
         st.session_state.compliance_button = False
