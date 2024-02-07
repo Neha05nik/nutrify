@@ -9,3 +9,4 @@ mistralai
 langchain
 streamlit_modal
 boto3
+streamlit_authenticator 
