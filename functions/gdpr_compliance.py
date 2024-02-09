@@ -25,9 +25,11 @@ def run_compliance_modal():
     if not st.session_state.compliance_button:
         with modal.container():
             st.write("I consent to my conversation being conserved and used to improve the chatbot model")
-
-            consent_button = st.button("**I agree**")
-            no_consent_button = st.button("**I do not agree**") 
+            
+            col1, col2 = st.columns(2)
+            
+            consent_button = col1.button("**I agree**")
+            no_consent_button = col2.button("**I do not agree**") 
 
             if consent_button:
                 st.session_state.compliance_button = True

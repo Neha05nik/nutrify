@@ -65,9 +65,12 @@ if st.session_state.successful_reset_pwd:
 
 # Show buttons before being logging or before "continue without logging" 
 bool_logging = not st.session_state.login and not st.session_state.without_loggin_button
+
+col1, col2 = st.sidebar.columns(2)
+
 # When user wants to log in
 if bool_logging:
-    if st.sidebar.button("**Log in**"):
+    if col1.button("**Log in**"):
         st.session_state.login_button = True
         st.session_state.sign_up_button = False
         st.session_state.forgot_pwd_button = False
@@ -76,7 +79,7 @@ if bool_logging:
 
 # When user wants to register
 if not st.session_state.register and bool_logging:
-    if st.sidebar.button("**Sign up**"):
+    if col2.button("**Sign up**"):
         st.session_state.login_button = False
         st.session_state.sign_up_button = True
         st.session_state.forgot_pwd_button = False
@@ -131,8 +134,10 @@ if st.session_state.login or st.session_state.without_loggin_button:
 
         st.sidebar.title(f'Welcome *{username}*')
 
+    col1, col2 = st.sidebar.columns(2)
+
     # Logout from account
-    if st.sidebar.button("**Logout**"):
+    if col1.button("**Log out**"):
         # Restart the parameters for loging in or Signing in 
         st.session_state.login = False
         st.session_state.register = False
@@ -147,15 +152,15 @@ if st.session_state.login or st.session_state.without_loggin_button:
         st.rerun()
 
     # We open the Option menu if clicked on
-    if st.sidebar.button("**Options**"):
+    if col2.button("**Settings**"):
         st.session_state.option_menu = True
         st.session_state.reset_pwd = False
         st.rerun()
     
     if st.session_state.option_menu:    
         modal = Modal(
-        "Options menu",
-        key="menu",
+        "Settings",
+        key="settings",
         padding=20,
         max_width=744
         )
@@ -172,7 +177,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
                     st.rerun()
                     
             change_consent = st.button("**Modify consent form**")
-            quitting_option = st.button("**Quit**")
+            quitting_option = st.button("Continue")
 
             # Solution for not working quitting with cross
             if quitting_option:
@@ -221,13 +226,13 @@ if st.session_state.login or st.session_state.without_loggin_button:
 
         if not compliance_message:
             authenticator.set_credential_information(st.session_state["email"], 
-                                                     'compliance_message', 
-                                                     True)
+                                                        'compliance_message', 
+                                                        True)
             # Calling the function to execute the GDPR form
             st.session_state.compliance_statut = run_compliance_modal()
             if st.session_state.compliance_button:
                 authenticator.set_credential_information(st.session_state["email"], 
-                                                     'compliance_statut', 
+                                                        'compliance_statut', 
                                                     st.session_state.compliance_statut)
         
                 st.session_state.compliance_message_bool = True
@@ -256,8 +261,8 @@ elif st.session_state.sign_up_button:
 
             # By default, the compliance message is set to False
             authenticator.set_credential_information(email_of_registered_user, 
-                                                 'compliance_message', 
-                                                 False)
+                                                    'compliance_message', 
+                                                    False)
             # We write the new user informations
             with open('config.yaml', 'w') as file:
                 yaml.dump(config, file, default_flow_style=False)

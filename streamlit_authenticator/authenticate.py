@@ -36,19 +36,23 @@ class Authenticate:
             A Validator object that checks the validity of the email field.
         """
         self.credentials                =   credentials
-        self.credentials['emails']   =   {key.lower(): value for key, value in credentials['emails'].items()}
         self.cookie_name                =   cookie_name
         self.key                        =   key
         self.cookie_expiry_days         =   cookie_expiry_days
         self.preauthorized              =   preauthorized
         self.cookie_manager             =   stx.CookieManager()
         self.validator                  =   validator if validator is not None else Validator()
-
-        for email, _ in self.credentials['emails'].items():
-            if 'logged_in' not in self.credentials['emails'][email]:
-                self.credentials['emails'][email]['logged_in'] = False
-            if not Hasher._is_hash(self.credentials['emails'][email]['password']):
-                self.credentials['emails'][email]['password'] = Hasher._hash(self.credentials['emails'][email]['password'])
+        
+        try:
+            self.credentials['emails']   =   {key.lower(): value for key, value in credentials['emails'].items()}
+            for email, _ in self.credentials['emails'].items():
+                if 'logged_in' not in self.credentials['emails'][email]:
+                    self.credentials['emails'][email]['logged_in'] = False
+                if not Hasher._is_hash(self.credentials['emails'][email]['password']):
+                    self.credentials['emails'][email]['password'] = Hasher._hash(self.credentials['emails'][email]['password'])
+        
+        except:
+            self.credentials['emails'] = {}
         
         if 'email' not in st.session_state:
             st.session_state['email'] = None
