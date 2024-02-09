@@ -20,21 +20,6 @@ def run_compliance_modal():
         max_width=744
     )
 
-    # When one of the consent buttons has been clicked, we display the message
-    if not st.session_state.compliance_message and st.session_state.compliance_button:
-        st.session_state.compliance_message = True
-        with modal.container():
-            if st.session_state.compliance_statut:
-                st.success("""
-                            **Thank you for your consent.**
-
-                            **Your data will only be used for improving your experience with Nutritional AI.**
-
-                            **It is recommended not to divulge any personal information.**
-                            """)
-            else:
-                st.warning("**Your data won't be used for improving Nutritional AI.**")
-
     if not st.session_state.compliance_button:
         with modal.container():
             st.write("I consent to my conversation being conserved and used to improve the chatbot model")
@@ -53,3 +38,25 @@ def run_compliance_modal():
 
     # We return the compliance status                
     return st.session_state.compliance_statut
+
+
+def get_compliance_message(compliance_statut):
+
+    modal = Modal(
+        "Compliance form",
+        key="modal2",
+        padding=20,
+        max_width=744
+    )
+
+    with modal.container():
+        if compliance_statut:
+            st.success("""
+                        **Thank you for your consent.**
+
+                        **Your data will only be used for improving your experience with Nutritional AI.**
+
+                        **It is recommended not to divulge any personal information.**
+                        """)
+        else:
+            st.warning("**Your data won't be used for improving Nutritional AI.**")

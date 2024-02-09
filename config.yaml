@@ -3,52 +3,38 @@ cookie:
   key: some_signature_key
   name: some_cookie_name
 credentials:
-  usernames:
-    a:
-      email: aa@gmail.com
+  emails:
+    a@gmail.com:
+      compliance_message: true
+      compliance_statut: false
       logged_in: false
-      name: aa
-      password: $2b$12$3OzjQ8djjIylKozC.3FLzuW2u9d21Ciadwk2k92t3LMQUtzjhL.tK
-    aaa:
-      email: aaa@gmail.com
+      password: $2b$12$kvzlZort0..Ki5Y0KdB4guD9dmi6.xloES4J8ju7VflyB1xaWB9P2
+    aaa@gmail.com:
       logged_in: false
-      name: aaa
-      password: $2b$12$m4.UrP4Ku.BcgVJl2rOuGeencOnwUZ6/XgClbjxahQSk0hMGwHMXm
-    aaaaa:
-      email: aaaaaa@gmail.com
+      password: $2b$12$kDQVLyiIuVcTZMNSTCShKeC4uAQualwPBsOR8nNg6HOiJ3GcouDgi
+    aza@gmail.com:
+      compliance_message: true
+      compliance_statut: true
       logged_in: false
-      name: aaa
-      password: $2b$12$i6WE.RjJhU.JmaMAEdmYiuDjJgZaSPBFf2kKTGvjJ.TxMDAiRA98m
-    example:
-      email: e@gmail.com
+      password: $2b$12$bGkBFC7cWOWciZofUPvpKOmLjr3tfOKrTgLC1dGLJNwvLwwEq5/yi
+    b@gmail.com:
       logged_in: false
-      name: eeeee
-      password: $2b$12$uV27SzWI0/EvuNH2y0huruMXad9IAw./86c5L1owWLmZZrHXQMGla
-    exampleee:
-      email: eee@gmail.com
+      password: $2b$12$H.Wxlm5IMMrxAwyuBgI6j.BtDkumUQuxvbjRi4TBsD8SNZ0upgHxu
+    jsmith@gmail.com:
       logged_in: false
-      name: eeeee
-      password: $2b$12$ci2jOu7BqSSeAqDVS1IIDOdvxZnc8YyHYj0tRvIqBbaJrOJWnjHyy
-    jsmith:
-      email: jsmith@gmail.com
-      logged_in: false
-      name: John Smith
       password: $2b$12$06aKBOXstb17GpPWAZBEvuMVY67CVgh1pinKeD3ZukUKwDJ6o6gje
-    rbriggs:
-      email: rbriggs@gmail.com
+    rbriggs@gmail.com:
       logged_in: false
-      name: Rebecca Briggs
       password: $2b$12$K0YPSaOwoVvX2tZVILUtpeJScVrjhMspBnzJKT1XSvPI65MEYJcHO
-    ruben:
-      email: a@gmail.com
+    t@gmail.com:
       logged_in: false
-      name: Rub
-      password: $2b$12$fF8.L2JnjHEM4trN4nIO2.xqYi61zZxMgGsGN3CrFX.5zOQ/kv38e
-    test:
-      email: test@gmail.com
+      password: $2b$12$Y5dSDUGohYOTTwQx9dh/oOWpTDOnA2R3TWSLN/1r8XEeVfYwSb3Ee
+    test@gmail.com:
       logged_in: false
-      name: test
-      password: $2b$12$jgaJJPkEs40h.b9.kOqLF.H2Bz56bXRRSZ/bJNCV9fAfpG4rIUUxS
+      password: $2b$12$J6Ir95fed8EsjF/eCws0ReLi7zHMl4y/OsWcBicBLEzW.Brf2bUZq
+    z@gmail.com:
+      logged_in: false
+      password: $2b$12$Ocx.OFnAjbvq83HN1ZmcN..19ZMLV2mrYtoYw0GuCM6l6B7zMD3SW
 preauthorized:
   emails:
   - melsby@gmail.com
