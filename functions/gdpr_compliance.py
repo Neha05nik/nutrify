@@ -36,6 +36,7 @@ def run_compliance_modal():
 
             elif no_consent_button:
                 st.session_state.compliance_button = True
+                st.session_state.compliance_statut = False
                 st.rerun()
 
     # We return the compliance status                

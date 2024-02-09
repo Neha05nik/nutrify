@@ -3,6 +3,7 @@ import yaml
 
 import streamlit_authenticator as stauth
 from functions.send_mail import send_email
+from streamlit_modal import Modal
 
 from yaml.loader import SafeLoader
 
@@ -41,6 +42,9 @@ if "successful_reset_pwd" not in st.session_state:
 
 if "compliance_message_bool" not in st.session_state:
     st.session_state.compliance_message_bool = False
+
+if "option_menu" not in st.session_state:
+    st.session_state.option_menu = False
 
 # Draw a title and some markdown
 st.title("Your personal nutritional AI ")
@@ -110,12 +114,22 @@ if st.session_state["authentication_status"] and st.session_state.login == False
 elif st.session_state["authentication_status"] is False:
     st.error('Email/password is incorrect')
 
-# When user is log in
-if st.session_state.login:
-    # We track the first part of the email
-    username = st.session_state["email"].split('@')[0]
+# When user is log in with or without credentials
+if st.session_state.login or st.session_state.without_loggin_button:
 
-    st.sidebar.title(f'Welcome *{username}*')
+    if st.session_state.without_loggin_button:
+        # Generate a random user number 
+        if "user_id" not in st.session_state:
+            st.session_state.user_id = f"user_{generate_random_number()}"
+        else:
+            st.session_state.user_id = st.session_state.user_id
+
+        st.sidebar.title(f'Welcome *{st.session_state.user_id}*')
+    else: 
+        # We track the first part of the email
+        username = st.session_state["email"].split('@')[0]
+
+        st.sidebar.title(f'Welcome *{username}*')
 
     # Logout from account
     if st.sidebar.button("**Logout**"):
@@ -124,55 +138,114 @@ if st.session_state.login:
         st.session_state.register = False
         st.session_state["authentication_status"] = None
         st.session_state.reset_pwd = False
+        if st.session_state.without_loggin_button:
+            st.session_state.without_loggin_button = False
+            st.session_state.user_id = f"user_{generate_random_number()}"
+            st.session_state.compliance_button = False
+            st.session_state.compliance_message = False
+
         st.rerun()
 
-    # Button to reset password
-    elif st.sidebar.button("**Reset password**"):
-        st.session_state.reset_pwd = True
+    # We open the Option menu if clicked on
+    if st.sidebar.button("**Options**"):
+        st.session_state.option_menu = True
+        st.session_state.reset_pwd = False
         st.rerun()
+    
+    if st.session_state.option_menu:    
+        modal = Modal(
+        "Options menu",
+        key="menu",
+        padding=20,
+        max_width=744
+        )
+        
+        with modal.container():
+            if st.session_state.login:
+                # Button to reset password
+                rst_pwd = st.button("**Reset password**")
 
-    if st.session_state.reset_pwd:
+                if rst_pwd:
+                    st.session_state.option_menu = False
+                    # To launch the modification password form
+                    st.session_state.reset_pwd = True
+                    st.rerun()
+                    
+            change_consent = st.button("**Modify consent form**")
+            quitting_option = st.button("**Quit**")
+
+            # Solution for not working quitting with cross
+            if quitting_option:
+                st.session_state.option_menu = False
+                st.rerun()
+
+            if change_consent:
+                st.session_state.option_menu = False
+                # To relaunch the compliance message
+                if st.session_state.login:
+                    authenticator.set_credential_information(st.session_state["email"], 'compliance_message', False)
+                    st.session_state.compliance_button = False
+                    # We write the new user informations
+                    with open('config.yaml', 'w') as file:
+                        yaml.dump(config, file, default_flow_style=False)
+                else:
+                    st.session_state.compliance_message = False
+                    st.session_state.compliance_button = False
+                st.rerun()
+
+    if st.session_state.login:
+
+        if st.session_state.reset_pwd:
+            try:
+                # Return true when password is correctly change
+                password_of_registered_user = authenticator.reset_password(st.session_state["email"])
+                if password_of_registered_user:
+                    st.session_state.reset_pwd = False
+                    # We write the new user informations
+                    with open('config.yaml', 'w') as file:
+                        yaml.dump(config, file, default_flow_style=False)
+
+                    st.session_state.successful_reset_pwd = True
+
+                    st.rerun()
+            except Exception as e:
+                st.error(e)
+
+        # We check if the compliance_message was asked to the user, mandatory in the first connexion
         try:
-            # Return true when password is correctly change
-            password_of_registered_user = authenticator.reset_password(st.session_state["email"])
-            if password_of_registered_user:
-                st.session_state.reset_pwd = False
+            compliance_message = authenticator.get_credential_information(st.session_state["email"], 'compliance_message')
+            compliance_statut = authenticator.get_credential_information(st.session_state["email"], 'compliance_statut')
+        except:
+            # If error, and a compliance_message was not created or answered by the user, we relaunch the 
+            compliance_message = False
+
+        if not compliance_message:
+            authenticator.set_credential_information(st.session_state["email"], 
+                                                     'compliance_message', 
+                                                     True)
+            # Calling the function to execute the GDPR form
+            st.session_state.compliance_statut = run_compliance_modal()
+            if st.session_state.compliance_button:
+                authenticator.set_credential_information(st.session_state["email"], 
+                                                     'compliance_statut', 
+                                                    st.session_state.compliance_statut)
+        
+                st.session_state.compliance_message_bool = True
+
                 # We write the new user informations
                 with open('config.yaml', 'w') as file:
                     yaml.dump(config, file, default_flow_style=False)
 
-                st.session_state.successful_reset_pwd = True
-
                 st.rerun()
-        except Exception as e:
-            st.error(e)
 
-    # We check if the compliance_message was asked to the user, mandatory in the first connexion
-    try:
-        compliance_message = authenticator.get_credential_information(st.session_state["email"], 'compliance_message')
-        compliance_statut = authenticator.get_credential_information(st.session_state["email"], 'compliance_statut')
-    except:
-        # If error, and a compliance_message was not created or answered by the user, we relaunch the 
-        compliance_message = False
-
-    if not compliance_message:
-        authenticator.set_credential_information(st.session_state["email"], 
-                                                 'compliance_message', 
-                                                 True)
+    else: 
+        
         # Calling the function to execute the GDPR form
         st.session_state.compliance_statut = run_compliance_modal()
-        if st.session_state.compliance_button:
-            authenticator.set_credential_information(st.session_state["email"], 
-                                                 'compliance_statut', 
-                                                st.session_state.compliance_statut)
+
+        if st.session_state.compliance_button and not st.session_state.compliance_message:
         
             st.session_state.compliance_message_bool = True
-
-            # We write the new user informations
-            with open('config.yaml', 'w') as file:
-                yaml.dump(config, file, default_flow_style=False)
-
-            st.rerun()
 
 # When the user at hit the sign up button
 elif st.session_state.sign_up_button:
@@ -221,35 +294,6 @@ elif st.session_state.forgot_pwd_button:
     except Exception as e:
         st.error(e)
 
-elif st.session_state.without_loggin_button:
-
-    # Generate a random user number 
-    if "user_id" not in st.session_state:
-        st.session_state.user_id = f"user_{generate_random_number()}"
-    else:
-        st.session_state.user_id = st.session_state.user_id
-
-    st.sidebar.title(f'Welcome *{st.session_state.user_id}*')
-
-    # Logout from account
-    if st.sidebar.button("**Logout**"):
-        # Restart the parameters for loging in or Signing in 
-        st.session_state.login = False
-        st.session_state.register = False
-        st.session_state["authentication_status"] = None
-        st.session_state.reset_pwd = False
-        st.session_state.without_loggin_button = False
-        st.session_state.user_id = f"user_{generate_random_number()}"
-        st.session_state.compliance_button = False
-        st.session_state.compliance_message = False
-        st.rerun()
-
-    # Calling the function to execute the GDPR form
-    st.session_state.compliance_statut = run_compliance_modal()
-
-    if st.session_state.compliance_button and not st.session_state.compliance_message:
-        
-        st.session_state.compliance_message_bool = True
 
 # To display the compliance message True: accepted/ False: Refused
 if st.session_state.compliance_message_bool:
@@ -257,9 +301,9 @@ if st.session_state.compliance_message_bool:
     st.session_state.compliance_message = True
     st.session_state.compliance_message_bool = False
 
-    try:
+    if st.session_state.login:
         compliance_statut = authenticator.get_credential_information(st.session_state["email"], 'compliance_statut')
-    except:
+    else:
         compliance_statut = st.session_state.compliance_statut
 
     get_compliance_message(compliance_statut)
