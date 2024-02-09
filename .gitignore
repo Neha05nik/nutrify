@@ -4,3 +4,5 @@ configs.py
 __pycache__
 env/
 *.ipynb
+Developing RAG.ipynb
+main_test.py

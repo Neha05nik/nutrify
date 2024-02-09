@@ -8,9 +8,14 @@ def generate_random_number():
     return random.randint(1, 10**12)
 
 # Function to upload logs to S3 bucket
-def upload_to_s3(bucket_name, key, data):
+def upload_to_s3(bucket_name, key, data, check_number = False):
     s3 = boto3.client('s3')
-    s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(data))
+    if check_number:
+        print(key[:-5] + "/")
+        print(len(s3.list_objects_v2(Bucket=bucket_name, Prefix=key[:-5] + "/")))
+        print(s3.list_objects_v2(Bucket=bucket_name, Prefix=key[:-5] + "/"))
+    
+    #s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(data))
 
 # Function to upload logs to S3 bucket
 def upload_bug_to_s3(bucket_name, error):

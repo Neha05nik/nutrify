@@ -189,7 +189,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
         # We check if the compliance_message was asked to the user, mandatory in the first connexion
         try:
             compliance_message = authenticator.get_credential_information(st.session_state["email"], 'compliance_message')
-            compliance_statut = authenticator.get_credential_information(st.session_state["email"], 'compliance_statut')
+            st.session_state.compliance_statut = authenticator.get_credential_information(st.session_state["email"], 'compliance_statut')
         except:
             # If error, and a compliance_message was not created or answered by the user, we relaunch the 
             compliance_message = False
@@ -211,6 +211,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
                 saving_configs(config, "nutritional_ai/config.yaml")
 
                 st.rerun()
+
 
     else: 
         
@@ -499,12 +500,17 @@ if st.session_state.login or st.session_state.without_loggin_button:
            # If user consent to logging
            if st.session_state.compliance_statut:
                 # S3 bucket details for logging folder
-                s3_key = f'logs/conversations/{st.session_state.user_id}.json'
+                if st.session_state.login:
+                    s3_key = f'logs/conversations/users/{st.session_state.user_id}.json'
+                    check_number = True
+                elif st.session_state.without_loggin_button:
+                    s3_key = f'logs/conversations/visitors/{st.session_state.user_id}.json'
+                    check_number = False
 
                 append_to_logs(st.session_state.stock_messages, question, answer, 
                                engine_AI, answer_AI_persona, answer_AI_type)
         
-                upload_to_s3(S3_BUCKET_NAME, s3_key, st.session_state.stock_messages)
+                upload_to_s3(S3_BUCKET_NAME, s3_key, st.session_state.stock_messages, check_number)
 
            st.rerun()
        except Exception as e:
