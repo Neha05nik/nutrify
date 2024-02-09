@@ -16,7 +16,7 @@ credentials:
       compliance_message: true
       compliance_statut: true
       logged_in: false
-      password: $2b$12$bGkBFC7cWOWciZofUPvpKOmLjr3tfOKrTgLC1dGLJNwvLwwEq5/yi
+      password: $2b$12$.3KFOOvm0.Cw3NMYafoMuuAoX7x.SaJBW2G6N.Anpx/9COWKjJ8a6
     b@gmail.com:
       logged_in: false
       password: $2b$12$H.Wxlm5IMMrxAwyuBgI6j.BtDkumUQuxvbjRi4TBsD8SNZ0upgHxu

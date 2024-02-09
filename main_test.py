@@ -7,6 +7,7 @@ from functions.send_mail import send_email
 from yaml.loader import SafeLoader
 
 from functions.gdpr_compliance import run_compliance_modal, get_compliance_message
+from functions.logging import generate_random_number
 
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
@@ -19,34 +20,15 @@ authenticator = stauth.Authenticate(
     config['preauthorized']
 )
 
-if "login" not in st.session_state:
-    st.session_state.login = False
-else:
-    st.session_state.login = st.session_state.login
-    
-if "login_button" not in st.session_state:
-    st.session_state.login_button = False
-else:
-    st.session_state.login_button = st.session_state.login_button
-if "register" not in st.session_state:
-    st.session_state.register = False
-else:
-    st.session_state.register = st.session_state.register
-    
-if "sign_up_button" not in st.session_state:
-    st.session_state.sign_up_button = False
-else:
-    st.session_state.sign_up_button = st.session_state.sign_up_button
+# We check the parameters in the st.session_state
+authentification_buttons = ["login", "login_button", "register", "sign_up_button", "reset_pwd",
+                            "forgot_pwd", "forgot_pwd_button", "continue_without_logging", "without_loggin_button"]
 
-if "forgot_pwd" not in st.session_state:
-    st.session_state.forgot_pwd = False
-else:
-    st.session_state.sign_up_button = st.session_state.sign_up_button
-
-if "forgot_pwd_button" not in st.session_state:
-    st.session_state.forgot_pwd_button = False
-else:
-    st.session_state.forgot_pwd_button = st.session_state.forgot_pwd_button
+for auth_buttons in authentification_buttons:
+    if auth_buttons not in st.session_state:
+        st.session_state[auth_buttons] = False
+    else:
+        st.session_state[auth_buttons] = st.session_state[auth_buttons]    
     
 if "successful_registration" not in st.session_state:
     st.session_state.successful_registration = False
@@ -57,15 +39,8 @@ if "successful_forgotten_pwd" not in st.session_state:
 if "successful_reset_pwd" not in st.session_state:
     st.session_state.successful_reset_pwd = False
 
-if "reset_pwd" not in st.session_state:
-    st.session_state.reset_pwd = False
-else: 
-    st.session_state.reset_pwd = st.session_state.reset_pwd
-
 if "compliance_message_bool" not in st.session_state:
     st.session_state.compliance_message_bool = False
-
-
 
 # Draw a title and some markdown
 st.title("Your personal nutritional AI ")
@@ -84,28 +59,42 @@ if st.session_state.successful_reset_pwd:
     st.success('Password modified successfully')
     st.session_state.successful_reset_pwd = False
 
+# Show buttons before being logging or before "continue without logging" 
+bool_logging = not st.session_state.login and not st.session_state.without_loggin_button
 # When user wants to log in
-if st.session_state.login == False:
+if bool_logging:
     if st.sidebar.button("**Log in**"):
         st.session_state.login_button = True
         st.session_state.sign_up_button = False
         st.session_state.forgot_pwd_button = False
+        st.session_state.without_loggin_button = False
         st.rerun()
 
 # When user wants to register
-if st.session_state.register == False and st.session_state.login == False:
+if not st.session_state.register and bool_logging:
     if st.sidebar.button("**Sign up**"):
         st.session_state.login_button = False
         st.session_state.sign_up_button = True
         st.session_state.forgot_pwd_button = False
+        st.session_state.without_loggin_button = False
         st.rerun()
 
 # When user forgot its password
-if st.session_state.forgot_pwd == False and st.session_state.login == False:
+if not st.session_state.forgot_pwd and bool_logging:
     if st.sidebar.button("**Forgot password**"):
         st.session_state.login_button = False
         st.session_state.sign_up_button = False
         st.session_state.forgot_pwd_button = True
+        st.session_state.without_loggin_button = False
+        st.rerun()
+
+# When user forgot its password
+if bool_logging:
+    if st.sidebar.button("**Continue without logging**"):
+        st.session_state.login_button = False
+        st.session_state.sign_up_button = False
+        st.session_state.forgot_pwd_button = False
+        st.session_state.without_loggin_button = True
         st.rerun()
 
 # We launch the authenticator process
@@ -231,18 +220,50 @@ elif st.session_state.forgot_pwd_button:
 
     except Exception as e:
         st.error(e)
-   
+
+elif st.session_state.without_loggin_button:
+
+    # Generate a random user number 
+    if "user_id" not in st.session_state:
+        st.session_state.user_id = f"user_{generate_random_number()}"
+    else:
+        st.session_state.user_id = st.session_state.user_id
+
+    st.sidebar.title(f'Welcome *{st.session_state.user_id}*')
+
+    # Logout from account
+    if st.sidebar.button("**Logout**"):
+        # Restart the parameters for loging in or Signing in 
+        st.session_state.login = False
+        st.session_state.register = False
+        st.session_state["authentication_status"] = None
+        st.session_state.reset_pwd = False
+        st.session_state.without_loggin_button = False
+        st.session_state.user_id = f"user_{generate_random_number()}"
+        st.session_state.compliance_button = False
+        st.session_state.compliance_message = False
+        st.rerun()
+
+    # Calling the function to execute the GDPR form
+    st.session_state.compliance_statut = run_compliance_modal()
+
+    if st.session_state.compliance_button and not st.session_state.compliance_message:
+        
+        st.session_state.compliance_message_bool = True
+
 # To display the compliance message True: accepted/ False: Refused
 if st.session_state.compliance_message_bool:
 
+    st.session_state.compliance_message = True
     st.session_state.compliance_message_bool = False
 
-    compliance_statut = authenticator.get_credential_information(st.session_state["email"], 'compliance_statut')
-    
+    try:
+        compliance_statut = authenticator.get_credential_information(st.session_state["email"], 'compliance_statut')
+    except:
+        compliance_statut = st.session_state.compliance_statut
+
     get_compliance_message(compliance_statut)
 
-
-#elif st.session_state["authentication_status"]:
 
 
 

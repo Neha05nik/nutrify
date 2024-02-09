@@ -12,6 +12,8 @@ def run_compliance_modal():
         st.session_state.compliance_statut = st.session_state.compliance_statut
     if 'compliance_message' not in st.session_state:
         st.session_state.compliance_message = False
+    else:
+        st.session_state.compliance_message = st.session_state.compliance_message
 
     modal = Modal(
         "Compliance form",
