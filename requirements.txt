@@ -9,6 +9,6 @@ mistralai
 langchain
 streamlit_modal
 boto3
-jwt
+PyJWT
 bcrypt
 extra_streamlit_components
