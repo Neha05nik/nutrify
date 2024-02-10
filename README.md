@@ -41,4 +41,20 @@ To get started with Nutritional AI, ensure you have the following prerequisites 
 - bcrypt==4.1.2
 - extra_streamlit_components==0.1.60
 
-  You will also have to get multiple keys and setup a .streamlit/secrets.toml file 
+  You will also have to get multiple keys and setup a .streamlit/secrets.toml file
+  For the database, I use [AstraDB](https://astra.datastax.com/)https://astra.datastax.com/
+  You can setup a database, free of charge. You will have to have a token from Astra, an Endpoint and the Collection.
+  To retrieve articles from NCBI, you will have to create a key
+  To vectorize the texts into the database, you can choose either GPT encoder or Hugging face (get also a key).
+  For using the chat generator, you will have to get an Open AI key if you use GPT or an Mistral key if you want to use Mistral.
+
+  Others things included in the project, but that can be taken out: Email for sending forgotten password and Qrcode.
+
+### Installation:
+Clone the repository and install the necessary dependencies:
+
+```bash
+$ git clone https://github.com/RubenHf/RAG_Scientific_Article.git
+$ cd RAG_Scientific_Article
+$ pip install -r requirements.txt
+
