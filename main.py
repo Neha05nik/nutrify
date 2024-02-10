@@ -116,10 +116,12 @@ if bool_logging:
 
 # We launch the authenticator process
 if st.session_state.login_button:
+    print("authentification")
     authenticator.login()
 
 # When the credentials are correct, the authentification is done
 if st.session_state["authentication_status"] and st.session_state.login == False:
+    print(st.session_state["authentication_status"])
     st.session_state.login = True
     st.session_state.login_button = False
     st.rerun()
@@ -130,6 +132,7 @@ elif st.session_state["authentication_status"] is False:
 
 # When user is log in with or without credentials
 if st.session_state.login or st.session_state.without_loggin_button:
+    print("test2")
 
     if "user_id" not in st.session_state:
         if st.session_state.without_loggin_button:
