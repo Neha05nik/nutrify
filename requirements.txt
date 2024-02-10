@@ -9,3 +9,6 @@ mistralai
 langchain
 streamlit_modal
 boto3
+jwt
+bcrypt
+extra_streamlit_components
