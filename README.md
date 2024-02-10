@@ -56,16 +56,33 @@ Clone the repository and install the necessary dependencies:
 ```bash
 $ git clone https://github.com/RubenHf/RAG_Scientific_Article.git
 $ cd RAG_Scientific_Article
+# Create a virtual environnement
+$ python -m venv env
+# Activate it
+$ .\env\Scripts\activate
 $ pip install -r requirements.txt
+```
 
 ## Usage:
 ### To launch the chatbot
 ```bash
 $ streamlit run main.py
+```
 
 ### To launch the AstraDB script feeder
 ```bash
 $ streamlit run NCBI_retriever.py
+```
+
+## Contributing:
+I welcome contributions to enhance Nutritional AI's capabilities.
+
+## License:
+Apache-2.0 license
+
+## Acknowledgments:
+Nutritional AI's knowledge base is fueled by scientific abstracts. We extend our gratitude to the research community for their valuable contributions.
+I thank the creator of streamlit_authenticator (https://github.com/mkhorasani/Streamlit-Authenticator) on which the authenticator is fork from
 
 
 
