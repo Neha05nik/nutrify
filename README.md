@@ -58,3 +58,14 @@ $ git clone https://github.com/RubenHf/RAG_Scientific_Article.git
 $ cd RAG_Scientific_Article
 $ pip install -r requirements.txt
 
+## Usage:
+### To launch the chatbot
+```bash
+$ streamlit run main.py
+
+### To launch the AstraDB script feeder
+```bash
+$ streamlit run NCBI_retriever.py
+
+
+
