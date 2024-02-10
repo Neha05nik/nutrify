@@ -6,3 +6,4 @@ env/
 *.ipynb
 Developing RAG.ipynb
 main_test.py
+env2/
