@@ -409,33 +409,40 @@ if st.session_state.login or st.session_state.without_loggin_button:
 
         if st.session_state.previous_conversation != None:
             bool_timeline = [True, True, True, True]
-            # We read from the most recent to oldest
-            for i, conversation in enumerate(st.session_state.previous_conversation[::-1]):
-                # Each text is visible as a button
-                title = return_conversation(conversation)[0]['content']
-                time_conversation = return_dates(conversation)[0]
+            try:
+                # We read from the most recent to oldest
+                for i, conversation in enumerate(st.session_state.previous_conversation[::-1]):
+                    # Each text is visible as a button
+                    title = return_conversation(conversation)[0]['content']
+                    time_conversation = return_dates(conversation)[0]
 
-                if return_time_difference(time_conversation) == 0 and bool_timeline[0]:
-                    st.sidebar.subheader("Today's conversations")  
-                    bool_timeline[0] = False
+                    if return_time_difference(time_conversation) == 0 and bool_timeline[0]:
+                        st.sidebar.subheader("Today's conversations")  
+                        bool_timeline[0] = False
 
-                elif return_time_difference(time_conversation) == 1 and bool_timeline[1]:
-                    st.sidebar.subheader("Yesterday's conversations")
-                    bool_timeline[1] = False
+                    elif return_time_difference(time_conversation) == 1 and bool_timeline[1]:
+                        st.sidebar.subheader("Yesterday's conversations")
+                        bool_timeline[1] = False
 
-                elif return_time_difference(time_conversation) > 1 and return_time_difference(time_conversation) <= 30 and bool_timeline[2]:
-                    st.sidebar.subheader("Previous 7 days's conversations")
-                    bool_timeline[2] = False
+                    elif return_time_difference(time_conversation) > 1 and return_time_difference(time_conversation) <= 30 and bool_timeline[2]:
+                        st.sidebar.subheader("Previous 7 days's conversations")
+                        bool_timeline[2] = False
 
-                elif return_time_difference(time_conversation) > 30 and bool_timeline[3]:
-                    st.sidebar.subheader("Previous 30 days's conversations")
-                    bool_timeline[3] = False
+                    elif return_time_difference(time_conversation) > 30 and bool_timeline[3]:
+                        st.sidebar.subheader("Previous 30 days's conversations")
+                        bool_timeline[3] = False
 
-                # We display title and subtitle on two separate rows in the button
-                if st.sidebar.button(f"{title}", key=i):
-                    # Do something when the button is clicked
-                    st.session_state.messages = return_conversation(conversation)
-                    st.session_state.first_question = True
+                    # We display title and subtitle on two separate rows in the button
+                    if st.sidebar.button(f"{title}", key=i):
+                        # Do something when the button is clicked
+                        st.session_state.messages = return_conversation(conversation)
+                        st.session_state.first_question = True
+                        
+            except Exception as e:
+                # upload the log for bug 
+                upload_bug_to_s3(S3_BUCKET_NAME, str(e))
+                container = st.sidebar.container()
+                container.error("Reload the page to see the previous conversations")
 
     prompt = load_prompt(answer_AI_type, answer_AI_persona)
 
@@ -568,7 +575,6 @@ if st.session_state.login or st.session_state.without_loggin_button:
                 
            st.rerun()
        except Exception as e:
-           print(e)
            # If an error occur
            st.session_state.messages.append({"role": "ai", "content": st.error("An error was detected, retry with another setup or question. Sorry for the inconvenience")})
            # Upload error to S3 bucket for further investigation
