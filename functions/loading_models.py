@@ -9,9 +9,9 @@ try:
     HF_API_KEY = st.secrets["HF_API_KEY"]
     MISTRAL_API_KEY  =  st.secrets["MISTRAL_API_KEY"]
 
-except:
-    # For local use
-    from configs import *
+except Exception as e:
+    print(e)
+    
 
 # Cache OpenAI Chat Model for future runs
 @st.cache_resource()

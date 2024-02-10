@@ -7,8 +7,8 @@ from email.mime.multipart import MIMEMultipart
 try:
     SITE_EMAIL = st.secrets["SITE_EMAIL"]
     PASSWORD_EMAIL = st.secrets["PASSWORD_EMAIL"]
-except:
-    print("Error loading email")
+except Exception as e:
+    print(e)
 
 def send_email(to_email, new_password):
     # Set up the email server

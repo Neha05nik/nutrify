@@ -8,9 +8,8 @@ from yaml.loader import SafeLoader
 
 try:
     S3_BUCKET = st.secrets["S3_BUCKET"]
-except:
-    # For local use
-    from configs import *
+except Exception as e:
+    print(e)
 
 # Function to load authenticator from S3 bucket
 def loading_authenticator(key):

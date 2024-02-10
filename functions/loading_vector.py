@@ -7,9 +7,8 @@ try:
     ASTRA_TOKEN = st.secrets["ASTRA_TOKEN"]
     HF_API_KEY = st.secrets["HF_API_KEY"]
     ASTRA_COLLECTION  =  st.secrets["ASTRA_COLLECTION"]
-except:
-    # For local use
-    from configs import *
+except Exception as e:
+    print(e)
 
 # Cache the Astra DB Vector Store for future runs
 @st.cache_resource(show_spinner='Loading of the database')
