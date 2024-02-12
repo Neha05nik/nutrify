@@ -1,5 +1,4 @@
 # Importing libraries
-#from importlib import metadata
 from NCBI_retriever import perform_esearch_ids, perform_efetch_abstracts
 import streamlit as st
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -27,24 +26,15 @@ except:
 if 'add_second_query' not in st.session_state:
     st.session_state.add_second_query = False
 
-if 'df_articles_to_push' not in st.session_state:
-    st.session_state.df_articles_to_push = pd.DataFrame()
-elif 'df_articles_to_push' in st.session_state:
-    st.session_state.df_articles_to_push = st.session_state.df_articles_to_push
-
-if 'df_articles' not in st.session_state:
-    st.session_state.df_articles = pd.DataFrame()
-elif 'df_articles' in st.session_state:
-    st.session_state.df_articles = st.session_state.df_articles
+for df in ['df_articles_to_push', 'df_articles']:
+    if df not in st.session_state:
+        st.session_state[df] = pd.DataFrame()
+    else:
+        st.session_state[df] = st.session_state[df]
     
-if 'clicked_added' not in st.session_state:
-    st.session_state.clicked_added = False
-    
-if 'clicked_searched' not in st.session_state:
-    st.session_state.clicked_searched = False
-    
-if 'generated_summary_button' not in st.session_state:
-    st.session_state.generated_summary_button = False
+for initialization in ['clicked_added', 'clicked_searched', 'generated_summary_button']:
+    if initialization not in st.session_state:
+        st.session_state[initialization] = False
     
 if 'validated_credential' not in st.session_state:
     st.session_state.validated_credential = False
@@ -63,7 +53,7 @@ else:
         st.session_state.key_1 = None
     else:
         st.session_state.key_1 = st.session_state.key_1 
-if ASTRA_API_ENDPOINT :
+if ASTRA_API_ENDPOINT:
     st.session_state.key_3 = ASTRA_API_ENDPOINT
 else:
     if 'key_3' not in st.session_state:
@@ -150,19 +140,6 @@ def load_summarize_prompt():
     #if embedding_type == "OpenAI":
     llm = OpenAI(temperature=0.3, 
         openai_api_key=st.session_state.key_1)
-    #elif embedding_type == "zephyr-7b-beta":
-        #from langchain_community.llms import HuggingFaceHub
-    #    llm = HuggingFaceHub(
-     #       huggingfacehub_api_token=HF_API_KEY, 
-      #      repo_id="HuggingFaceH4/zephyr-7b-beta", # Name of the repo
-       #     task="text-generation",
-        #    model_kwargs={
-         #       "max_new_tokens": 512,
-          #      "top_k": 5,
-           #     "temperature": 0.3,
-            #    "repetition_penalty": 1.03,
-            #},
-        #)
 
     map_prompt = """
     Write a concise summary of the following:
@@ -239,6 +216,8 @@ if st.sidebar.button('Search Articles'):
     def update_articles(query, nb_article):
         st.session_state.df_articles = get_articles(query, nb_article)
 
+        st.session_state.df_articles['query'] = query
+        
         st.session_state.df_articles_to_push = pd.concat([st.session_state.df_articles_to_push, 
                                                           st.session_state.df_articles]
                                                          ).drop_duplicates(['Abstract'], keep='first')
@@ -313,9 +292,11 @@ if st.session_state.df_articles_to_push.shape[0] > 0:
 
             vector_store.add_documents(prepared_documents)
 
+            number_article = st.session_state.df_articles_to_push.shape[0]
+
             st.session_state.df_articles_to_push = pd.DataFrame()
 
-            st.sidebar.text("Articles pushed to AstraDatabase")
+            st.sidebar.text(f"{number_article} articles pushed to AstraDatabase")
             st.sidebar.write("With embedding:", st.session_state.embedding_type)
 
             
