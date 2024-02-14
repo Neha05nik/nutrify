@@ -10,6 +10,7 @@ def load_prompt(answer_AI, answer_AI_type):
     base_prompt_2 = """
     If you don't know, do not answer.
     If you don't understand the question, ask the user to ask the question differently.
+    If the CONTEXT doesn't help, do not use it.
     """
 
     if answer_AI_type == "Normal":
@@ -23,7 +24,7 @@ def load_prompt(answer_AI, answer_AI_type):
         As a scientist, you use your knowledge to provide reasoned answers.
         You use reasoning to answer the user's questions.
         In your answers, you want to convince the user to eat foods that are known to improve human health.
-        You can cite articles used in the contexte.
+        You can cite articles used in the context.
         Always finish your answer by giving the benefits of one cited food for the human body. 
         """
 

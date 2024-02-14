@@ -16,7 +16,7 @@ class StreamHandler(BaseCallbackHandler):
 
 
 # Generate the answer by calling OpenAI's Chat Model
-def get_gpt_answer(prompt, chat_model, retriever, query, previous_queries, response_placeholder):
+def get_gpt_answer(prompt, chat_model, vector_store, retriever, query, previous_queries, response_placeholder):
     
    # Search for context first
    #inputs = RunnableMap({
@@ -28,9 +28,20 @@ def get_gpt_answer(prompt, chat_model, retriever, query, previous_queries, respo
    
    # Retrieve relevant documents from AstraDB as context
    context = retriever.get_relevant_documents(query)
-   abstract = str([doc.page_content for doc in context])
 
-   response = chain.invoke({'context':abstract, 
+   try:
+       # We search for full abtract
+       full_documents = small_to_big(query, vector_store, context)
+       # We rerank the documents
+       reranked_documents = reranker_abstracts(query, full_documents)
+       # We add metadatas
+       abstracts = str(return_abtracts_from_documents(reranked_documents))
+       
+   except:
+       abstracts = str([doc.page_content for doc in context])
+
+
+   response = chain.invoke({'context':abstracts, 
                             'previous_questions': previous_queries, 
                             'question': query}, 
                             config={'callbacks': [StreamHandler(response_placeholder)]})
@@ -42,7 +53,7 @@ def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, p
    
    # Retrieve relevant documents from AstraDB as context
    context = retriever.get_relevant_documents(query)
-   #abstract = str([doc.page_content for doc in context])
+
    try:
        # We search for full abtract
        full_documents = small_to_big(query, vector_store, context)
@@ -76,7 +87,7 @@ def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, p
 # Generate the answer depending of Chat Model
 def get_answer(engine_AI, prompt, chat_model, vector_store, retriever, query, previous_queries, response_placeholder):
     if engine_AI == "gpt-3.5-turbo":
-        answer = get_gpt_answer(prompt, chat_model, retriever, query, previous_queries, response_placeholder)
+        answer = get_gpt_answer(prompt, chat_model, vector_store, retriever, query, previous_queries, response_placeholder)
         return answer
 
     elif engine_AI == 'Mistral-7B-v0.2':
