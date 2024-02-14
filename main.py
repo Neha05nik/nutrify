@@ -532,7 +532,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
            with st.chat_message('assistant'):
                response_placeholder = st.empty()
 
-               answer = get_answer(engine_AI, prompt, chat_model, retriever, question, previous_questions, response_placeholder)
+               answer = get_answer(engine_AI, prompt, chat_model, vector_store, retriever, question, previous_questions, response_placeholder)
 
            if citing_sources_AI:
                # We extract the closest data from our database to the question
@@ -582,3 +582,4 @@ if st.session_state.login or st.session_state.without_loggin_button:
 
            s3_key = f'logs/{st.session_state.user_id}.json'
 
+           print(e)

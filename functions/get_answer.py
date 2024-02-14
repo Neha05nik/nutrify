@@ -1,6 +1,7 @@
 ﻿from langchain.schema.runnable import RunnableMap
 from mistralai.models.chat_completion import ChatMessage
 from langchain.callbacks.base import BaseCallbackHandler
+from functions.retriever_abstracts import small_to_big, reranker_abstracts, return_abtracts_from_documents
 
 # Streaming call back handler for responses
 class StreamHandler(BaseCallbackHandler):
@@ -15,7 +16,7 @@ class StreamHandler(BaseCallbackHandler):
 
 
 # Generate the answer by calling OpenAI's Chat Model
-def get_gpt_answer(prompt, chat_model, retriever, question, previous_questions, response_placeholder):
+def get_gpt_answer(prompt, chat_model, retriever, query, previous_queries, response_placeholder):
     
    # Search for context first
    #inputs = RunnableMap({
@@ -26,27 +27,39 @@ def get_gpt_answer(prompt, chat_model, retriever, question, previous_questions, 
    chain = prompt | chat_model
    
    # Retrieve relevant documents from AstraDB as context
-   context = retriever.get_relevant_documents(question)
+   context = retriever.get_relevant_documents(query)
    abstract = str([doc.page_content for doc in context])
 
    response = chain.invoke({'context':abstract, 
-                            'previous_questions': previous_questions, 
-                            'question': question}, 
+                            'previous_questions': previous_queries, 
+                            'question': query}, 
                             config={'callbacks': [StreamHandler(response_placeholder)]})
 
    return response.content
 
 # Generate the answer by calling OpenAI's Chat Model
-def get_mistral_answer(prompt, client_mistral, retriever, question, previous_questions):
+def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, previous_queries):
    
    # Retrieve relevant documents from AstraDB as context
-   context = retriever.get_relevant_documents(question)
-   abstract = str([doc.page_content for doc in context])
+   context = retriever.get_relevant_documents(query)
+   #abstract = str([doc.page_content for doc in context])
+   try:
+       # We search for full abtract
+       full_documents = small_to_big(query, vector_store, context)
+       # We rerank the documents
+       reranked_documents = reranker_abstracts(query, full_documents)
+       # We add metadatas
+       abstracts = """CONTEXT: """ + str(return_abtracts_from_documents(reranked_documents))
+       
+   except:
+       abstracts = """CONTEXT: """ + str([doc.page_content for doc in context])
+
+   content = f"""{prompt} \n CONTEXT: \n {abstracts} \n PREVIOUS QUESTIONS: {previous_queries}"""
 
     # Incorporate the prompt with context into the Mistral chat
    messages = [
-        ChatMessage(role="system", content=prompt + abstract + previous_questions),
-        ChatMessage(role="user", content=question)
+        ChatMessage(role="system", content=content),
+        ChatMessage(role="user", content=query)
     ]
 
     # Chat with Mistral-7B-v0.2
@@ -61,15 +74,15 @@ def get_mistral_answer(prompt, client_mistral, retriever, question, previous_que
             yield chunk.choices[0].delta.content
 
 # Generate the answer depending of Chat Model
-def get_answer(engine_AI, prompt, chat_model, retriever, question, previous_questions, response_placeholder):
+def get_answer(engine_AI, prompt, chat_model, vector_store, retriever, query, previous_queries, response_placeholder):
     if engine_AI == "gpt-3.5-turbo":
-        answer = get_gpt_answer(prompt, chat_model, retriever, question, previous_questions, response_placeholder)
+        answer = get_gpt_answer(prompt, chat_model, retriever, query, previous_queries, response_placeholder)
         return answer
 
     elif engine_AI == 'Mistral-7B-v0.2':
         # To contain the full answer
         response_content = ""
-        for mistral_chunk in get_mistral_answer(prompt, chat_model, retriever, question, previous_questions):
+        for mistral_chunk in get_mistral_answer(prompt, chat_model, vector_store, retriever, query, previous_queries):
             response_content += mistral_chunk
             
             # Streaming through response_placeholder. Markdown for the text formating.
