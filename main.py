@@ -583,4 +583,3 @@ if st.session_state.login or st.session_state.without_loggin_button:
            s3_key = f'logs/{st.session_state.user_id}.json'
 
            print(e)
-           st.text(e)

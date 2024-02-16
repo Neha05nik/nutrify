@@ -65,7 +65,6 @@ def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, p
    except:
        abstracts = """CONTEXT: """ + str([doc.page_content for doc in context])
 
-   import streamlit as st
    content = f"""{prompt} \n CONTEXT: \n {abstracts} \n PREVIOUS QUESTIONS: {previous_queries}"""
 
     # Incorporate the prompt with context into the Mistral chat
@@ -73,7 +72,7 @@ def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, p
         ChatMessage(role="system", content=content),
         ChatMessage(role="user", content=query)
     ]
-   st.text(messages)
+   
     # Chat with Mistral-7B-v0.2
     # Answer is streamed. 
    for chunk in client_mistral.chat_stream(
