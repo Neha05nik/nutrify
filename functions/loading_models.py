@@ -24,6 +24,16 @@ def load_chat_model():
        verbose=True
    )
 
+# Cache OpenAI Chat Model for future runs
+@st.cache_resource()
+def load_OpenAI_GPT4():
+   return ChatOpenAI(
+       openai_api_key=OPENAI_API_KEY,
+       temperature=0.4,
+       model='gpt-4'
+   )
+
+
 # Cache HuggingFace Chat Model for future runs
 @st.cache_resource()
 def load_chat_model_HF():

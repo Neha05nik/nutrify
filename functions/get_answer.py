@@ -2,6 +2,7 @@
 from mistralai.models.chat_completion import ChatMessage
 from langchain.callbacks.base import BaseCallbackHandler
 from functions.retriever_abstracts import small_to_big, reranker_abstracts, return_abtracts_from_documents
+from functions.generate_question import get_mistral_requery, get_openAI_requery
 
 # Streaming call back handler for responses
 class StreamHandler(BaseCallbackHandler):
@@ -25,7 +26,10 @@ def get_gpt_answer(prompt, chat_model, vector_store, retriever, query, previous_
    #})
    
    chain = prompt | chat_model
-   
+
+   # We get a new query, generate by GPT-4 model
+   query = get_openAI_requery(query)
+
    # Retrieve relevant documents from AstraDB as context
    context = retriever.get_relevant_documents(query)
 
@@ -51,6 +55,9 @@ def get_gpt_answer(prompt, chat_model, vector_store, retriever, query, previous_
 # Generate the answer by calling OpenAI's Chat Model
 def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, previous_queries):
    
+   # We get a new query, generate by mistral small model
+   query = get_mistral_requery(client_mistral, query)
+
    # Retrieve relevant documents from AstraDB as context
    context = retriever.get_relevant_documents(query)
 
