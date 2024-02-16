@@ -5,7 +5,6 @@ import streamlit as st
 def load_prompt(answer_AI, answer_AI_type):
     base_prompt = """
     You're a helpful AI assistant tasked to answer the user's questions.
-    Your answers have to be in the same language as the user's questions.
     Your answers have to be related to nutrition.
     """
     base_prompt_2 = """
