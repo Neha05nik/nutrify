@@ -65,7 +65,7 @@ def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, p
    
    # We get a new query, generate by mistral small model
    query = get_mistral_requery(client_mistral, query)
-
+   
    # Retrieve relevant documents from AstraDB as context
    context = retriever.get_relevant_documents(query)
 
@@ -80,7 +80,11 @@ def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, p
    except:
        abstracts = """CONTEXT: """ + str([doc.page_content for doc in context])
 
-   content = f"""{prompt} \n CONTEXT: \n {abstracts} \n PREVIOUS QUESTIONS: {previous_queries} \n Give your answer in {language_query}"""
+   content = f"""{prompt} \n 
+                CONTEXT: \n {abstracts} \n 
+                PREVIOUS QUESTIONS: {previous_queries} \n 
+                GIVE YOUR FULL ANSWER IN '{language_query}' 
+                DO NOT PROVIDE A TRANSLATION IN ENGLISH IF IT IS ANOTHER LANGUAGE"""
 
     # Incorporate the prompt with context into the Mistral chat
    messages = [
