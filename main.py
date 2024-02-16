@@ -456,7 +456,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
             {previous_queries}
 
             QUERY:
-            {queries}
+            {query}
 
             YOUR ANSWER:"""
         # We have the prompt, then the context and finally the user question
