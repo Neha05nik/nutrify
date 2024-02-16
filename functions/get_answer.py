@@ -42,8 +42,8 @@ def get_gpt_answer(prompt, chat_model, vector_store, retriever, query, previous_
 
 
    response = chain.invoke({'context':abstracts, 
-                            'previous_questions': previous_queries, 
-                            'question': query}, 
+                            'previous_queries': previous_queries, 
+                            'query': query}, 
                             config={'callbacks': [StreamHandler(response_placeholder)]})
 
    return response.content

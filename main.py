@@ -452,11 +452,11 @@ if st.session_state.login or st.session_state.without_loggin_button:
             CONTEXT:
             {context}
 
-            PREVIOUS QUESTION:
-            {previous_questions}
+            PREVIOUS QUERIES:
+            {previous_queries}
 
-            QUESTION:
-            {question}
+            QUERY:
+            {queries}
 
             YOUR ANSWER:"""
         # We have the prompt, then the context and finally the user question
@@ -505,7 +505,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
        st.chat_message(message['role']).markdown(message['content'])
 
     # Draw the chat input box
-    if question := st.chat_input("How can I help you today?", max_chars=250) or example_question:
+    if question := st.chat_input("How can I help you today?", max_chars=150) or example_question:
        try:
            if example_question:
                question = example_question
