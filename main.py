@@ -455,6 +455,9 @@ if st.session_state.login or st.session_state.without_loggin_button:
             PREVIOUS QUERIES:
             {previous_queries}
 
+            GIVE YOUR ANSWER IN: 
+            {language_query}
+
             QUERY:
             {query}
 

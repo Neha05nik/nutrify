@@ -3,6 +3,7 @@ from mistralai.models.chat_completion import ChatMessage
 from langchain.callbacks.base import BaseCallbackHandler
 from functions.retriever_abstracts import small_to_big, reranker_abstracts, return_abtracts_from_documents
 from functions.generate_question import get_mistral_requery, get_openAI_requery
+from functions.language_dectection import detect_language
 
 # Streaming call back handler for responses
 class StreamHandler(BaseCallbackHandler):
@@ -27,6 +28,9 @@ def get_gpt_answer(prompt, chat_model, vector_store, retriever, query, previous_
    
    chain = prompt | chat_model
 
+   # We detect the language of the user's question
+   language_query = detect_language(query)
+
    # We get a new query, generate by GPT-4 model
    query = get_openAI_requery(query)
 
@@ -47,6 +51,7 @@ def get_gpt_answer(prompt, chat_model, vector_store, retriever, query, previous_
 
    response = chain.invoke({'context':abstracts, 
                             'previous_queries': previous_queries, 
+                            'language_query': language_query,
                             'query': query}, 
                             config={'callbacks': [StreamHandler(response_placeholder)]})
 
@@ -54,6 +59,9 @@ def get_gpt_answer(prompt, chat_model, vector_store, retriever, query, previous_
 
 # Generate the answer by calling OpenAI's Chat Model
 def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, previous_queries):
+   
+   # We detect the language of the user's question
+   language_query = detect_language(query)
    
    # We get a new query, generate by mistral small model
    query = get_mistral_requery(client_mistral, query)
@@ -72,7 +80,7 @@ def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, p
    except:
        abstracts = """CONTEXT: """ + str([doc.page_content for doc in context])
 
-   content = f"""{prompt} \n CONTEXT: \n {abstracts} \n PREVIOUS QUESTIONS: {previous_queries}"""
+   content = f"""{prompt} \n CONTEXT: \n {abstracts} \n PREVIOUS QUESTIONS: {previous_queries} \n Give your answer in {language_query}"""
 
     # Incorporate the prompt with context into the Mistral chat
    messages = [
