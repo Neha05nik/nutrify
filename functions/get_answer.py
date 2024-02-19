@@ -118,6 +118,11 @@ def get_answer(engine_AI, prompt, chat_model, vector_store, retriever, query, pr
     elif engine_AI == 'Mistral-7B-v0.2':
         # To contain the full answer
         answer = ""
+        
+        # In case it takes too long to have an answer.
+        # It helps the user to know an answer is coming
+        response_placeholder.markdown("Nutritional AI is thinking about your question...▌")
+
         for mistral_chunk in get_mistral_answer(prompt, chat_model, vector_store, retriever, query, previous_queries):
             answer += mistral_chunk
             

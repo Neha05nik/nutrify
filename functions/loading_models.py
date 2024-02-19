@@ -33,23 +33,6 @@ def load_OpenAI_GPT4():
        model='gpt-4'
    )
 
-
-# Cache HuggingFace Chat Model for future runs
-@st.cache_resource()
-def load_chat_model_HF():
-   return ChatHuggingFace(llm=HuggingFaceHub(
-    huggingfacehub_api_token=HF_API_KEY, 
-    repo_id="HuggingFaceH4/zephyr-7b-beta", # Name of the repo
-    task="text-generation",
-    model_kwargs={
-        "max_new_tokens": 4096,
-        "top_k": 50,
-        "temperature": 0.4,
-        "repetition_penalty": 1.03,
-    },
-    ), huggingfacehub_api_token=HF_API_KEY)
-#chat_model = load_chat_model_HF()
-
 # Cache Mistral Chat Model for future runs
 @st.cache_resource()
 def load_client_mistral():
