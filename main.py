@@ -486,14 +486,6 @@ if st.session_state.login or st.session_state.without_loggin_button:
     st.title("Your personal nutritional AI")
     st.markdown("""Your generative AI will guide you in your nutritional choice!""")
 
-    # Include the upload form for new data to be Vectorized
-    #with st.sidebar:
-    #   with st.form('upload'):
-    #       uploaded_file = st.file_uploader('Upload a document for additional context', type=['pdf'])
-    #       submitted = st.form_submit_button('Save to Astra DB')
-    #       if submitted:
-    #           vectorize_text(uploaded_file, vector_store)           
-
     # We suggest some simple questions
     if st.session_state.first_question == False:
         for i in range(4):
