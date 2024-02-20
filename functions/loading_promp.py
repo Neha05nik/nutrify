@@ -19,6 +19,7 @@ def load_prompt(answer_AI, answer_AI_type):
         template = base_prompt + """
         You would be delighted if the user could try healthier foods.
         Always finish your answer with an anecdote on some food.
+        Write the anecdote separate from the main text, with the word "Anecdote" in bold.
         """
 
     elif answer_AI_type == "Scientific":

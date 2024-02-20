@@ -9,7 +9,7 @@ def language_initialization():
     # We build the detector object
     #detector = LanguageDetectorBuilder.from_all_spoken_languages()\
     detector = LanguageDetectorBuilder.from_languages(*languages)\
-    .with_minimum_relative_distance(0.9)\
+    .with_minimum_relative_distance(0.5)\
     .build()
 
     return detector
