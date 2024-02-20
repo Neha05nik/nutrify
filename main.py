@@ -23,6 +23,7 @@ try:
 except:
     print("Error loading qr_image")
 
+# We are loading the authenticator object and the config from the S3
 authenticator, config = loading_authenticator("nutritional_ai/config.yaml")
 
 # We check the parameters in the st.session_state
@@ -35,36 +36,24 @@ for auth_buttons in authentification_buttons:
     else:
         st.session_state[auth_buttons] = st.session_state[auth_buttons]    
     
-if "successful_registration" not in st.session_state:
-    st.session_state.successful_registration = False
+init_buttons = ["successful_registration", "successful_forgotten_pwd", "successful_reset_pwd", 
+                "compliance_message_bool", "option_menu", "new_conversation", "previous_conversation"]
 
-if "successful_forgotten_pwd" not in st.session_state:
-    st.session_state.successful_forgotten_pwd = False
-
-if "successful_reset_pwd" not in st.session_state:
-    st.session_state.successful_reset_pwd = False
-
-if "compliance_message_bool" not in st.session_state:
-    st.session_state.compliance_message_bool = False
-
-if "option_menu" not in st.session_state:
-    st.session_state.option_menu = False
-
-if "new_conversation" not in st.session_state:
-    st.session_state.new_conversation = False
-
-if "previous_conversation" not in st.session_state:
-    st.session_state.previous_conversation = False
+for init_b in init_buttons:
+    if init_b not in st.session_state:
+        st.session_state[init_b] = False
 
 # Just to show that the registration worked
 if st.session_state.successful_registration:
     st.success('User registered successfully')
     st.session_state.successful_registration = False
 
+# Just to show that the new password was sent
 if st.session_state.successful_forgotten_pwd:
     st.success('New password sent to your email')
     st.session_state.successful_forgotten_pwd = False
 
+# Just to show that the password was successfully modified
 if st.session_state.successful_reset_pwd:
     st.success('Password modified successfully')
     st.session_state.successful_reset_pwd = False
@@ -142,8 +131,6 @@ if st.session_state.login or st.session_state.without_loggin_button:
             # We read the previous conversations
             s3_key = f'logs/conversations/users/{st.session_state.user_id}'
             st.session_state.previous_conversation = loading_s3_conversations(S3_BUCKET_NAME, s3_key)
-#    else: 
-#        st.session_state.user_id = st.session_state.user_id
         
     # We track the first part of the email if login else random user id
     username = st.session_state["email"].split('@')[0] if st.session_state.login else st.session_state.user_id
@@ -232,7 +219,6 @@ if st.session_state.login or st.session_state.without_loggin_button:
                 saving_configs(config, "nutritional_ai/config.yaml")
 
                 st.rerun()
-
 
     else: 
         
@@ -372,6 +358,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
         st.session_state.new_conversation = True
 
     if st.sidebar.button("Donation"):
+        # Added a paypal link, to help maintain the models online
         st.sidebar.image(QRCODE, width=200)
         st.sidebar.link_button('Paypal link', url = QRCODE_LINK)
         st.sidebar.markdown("""**If you find value in our service, consider supporting us with a small donation. 
@@ -485,14 +472,6 @@ if st.session_state.login or st.session_state.without_loggin_button:
     # Draw a title and some markdown
     st.title("Your personal nutritional AI")
     st.markdown("""Your generative AI will guide you in your nutritional choice!""")
-
-    # Include the upload form for new data to be Vectorized
-    #with st.sidebar:
-    #   with st.form('upload'):
-    #       uploaded_file = st.file_uploader('Upload a document for additional context', type=['pdf'])
-    #       submitted = st.form_submit_button('Save to Astra DB')
-    #       if submitted:
-    #           vectorize_text(uploaded_file, vector_store)           
 
     # We suggest some simple questions
     if st.session_state.first_question == False:

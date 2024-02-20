@@ -7,6 +7,7 @@ try:
     ASTRA_TOKEN = st.secrets["ASTRA_TOKEN"]
     HF_API_KEY = st.secrets["HF_API_KEY"]
     ASTRA_COLLECTION  =  st.secrets["ASTRA_COLLECTION"]
+
 except Exception as e:
     print(e)
 
@@ -15,8 +16,7 @@ except Exception as e:
 def load_vector_store():
     
     vector_store = AstraDB(
-    #embedding=OpenAIEmbeddings(),
-    # We use the embeddings
+    # We use the embeddings, it is free of charge
     embedding=HuggingFaceInferenceAPIEmbeddings(
             api_key=HF_API_KEY, 
             model_name="sentence-transformers/all-MiniLM-l6-v2"),
@@ -26,15 +26,17 @@ def load_vector_store():
 
     return vector_store
 
-vector_store = load_vector_store()
-
 # Cache the Retriever for future runs
 @st.cache_resource(show_spinner='Getting retriever')
 def load_retriever():
    # Get the retriever for the Chat Model
+   # The retriever search for the k=10 best match in the vector and keep only >0.5 threshold
+
    retriever = vector_store.as_retriever(
        search_kwargs={"score_threshold": 0.5, "k": 10}
    )
    return retriever
 
+# We load the vector and retriever
+vector_store = load_vector_store()
 retriever = load_retriever()

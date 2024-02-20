@@ -60,48 +60,54 @@ def get_gpt_answer(prompt, chat_model, vector_store, retriever, query, previous_
 # Generate the answer by calling OpenAI's Chat Model
 def get_mistral_answer(prompt, client_mistral, vector_store, retriever, query, previous_queries):
    
-   # We detect the language of the user's question
-   language_query = detect_language(query)
-   
-   # We get a new query, generate by mistral small model
-   query = get_mistral_requery(client_mistral, query)
-   
-   # Retrieve relevant documents from AstraDB as context
-   context = retriever.get_relevant_documents(query)
-
    try:
-       # We search for full abtract
-       full_documents = small_to_big(query, vector_store, context)
-       # We rerank the documents
-       reranked_documents = reranker_abstracts(query, full_documents)
-       # We add metadatas
-       abstracts = """CONTEXT: """ + str(return_abtracts_from_documents(reranked_documents))
-       
-   except:
-       abstracts = """CONTEXT: """ + str([doc.page_content for doc in context])
 
-   content = f"""{prompt} \n 
-                CONTEXT: \n {abstracts} \n 
-                PREVIOUS QUESTIONS: {previous_queries} \n 
-                GIVE YOUR FULL ANSWER IN '{language_query}' 
-                DO NOT PROVIDE A TRANSLATION IN ENGLISH IF IT IS ANOTHER LANGUAGE"""
-
-    # Incorporate the prompt with context into the Mistral chat
-   messages = [
-        ChatMessage(role="system", content=content),
-        ChatMessage(role="user", content=query)
-    ]
+       # We detect the language of the user's question
+       language_query = detect_language(query)
    
-    # Chat with Mistral-7B-v0.2
-    # Answer is streamed. 
-   for chunk in client_mistral.chat_stream(
-    model="mistral-tiny",
-    messages=messages,
-    temperature=0.4
-        ):
-        if chunk.choices[0].delta.content:
-            # We send a generator
-            yield chunk.choices[0].delta.content
+       # We get a new query, generate by mistral small model
+       query = get_mistral_requery(client_mistral, query)
+   
+       # Retrieve relevant documents from AstraDB as context
+       context = retriever.get_relevant_documents(query)
+
+       try:
+           # We search for full abtract
+           full_documents = small_to_big(query, vector_store, context)
+           # We rerank the documents
+           reranked_documents = reranker_abstracts(query, full_documents)
+           # We add metadatas
+           abstracts = """CONTEXT: """ + str(return_abtracts_from_documents(reranked_documents))
+       
+       except:
+           # If failed to retrieve the full documents or reranking, we send the normal context
+           abstracts = """CONTEXT: """ + str([doc.page_content for doc in context])
+
+       # We ground the answer in the same language as the question
+       content = f"""{prompt} \n 
+                    CONTEXT: \n {abstracts} \n 
+                    PREVIOUS QUESTIONS: {previous_queries} \n 
+                    GIVE YOUR FULL ANSWER IN '{language_query}' 
+                    DO NOT PROVIDE A TRANSLATION IN ENGLISH IF IT IS ANOTHER LANGUAGE"""
+
+        # Incorporate the prompt with context into the Mistral chat
+       messages = [
+            ChatMessage(role="system", content=content),
+            ChatMessage(role="user", content=query)
+        ]
+   
+        # Chat with Mistral-7B-v0.2
+        # Answer is streamed. 
+       for chunk in client_mistral.chat_stream(
+        model="mistral-tiny",
+        messages=messages,
+        temperature=0.4
+            ):
+            if chunk.choices[0].delta.content:
+                # We send a generator
+                yield chunk.choices[0].delta.content
+   except: 
+       return "Error occured, retry"
 
 # Generate the answer depending of Chat Model
 def get_answer(engine_AI, prompt, chat_model, vector_store, retriever, query, previous_queries, response_placeholder):
@@ -111,11 +117,16 @@ def get_answer(engine_AI, prompt, chat_model, vector_store, retriever, query, pr
 
     elif engine_AI == 'Mistral-7B-v0.2':
         # To contain the full answer
-        response_content = ""
+        answer = ""
+        
+        # In case it takes too long to have an answer.
+        # It helps the user to know an answer is coming
+        response_placeholder.markdown("Nutritional AI is thinking about your question...▌")
+
         for mistral_chunk in get_mistral_answer(prompt, chat_model, vector_store, retriever, query, previous_queries):
-            response_content += mistral_chunk
+            answer += mistral_chunk
             
             # Streaming through response_placeholder. Markdown for the text formating.
-            response_placeholder.markdown(response_content + "▌")
+            response_placeholder.markdown(answer + "▌")
 
-        return response_content
+        return answer
