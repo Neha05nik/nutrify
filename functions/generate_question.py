@@ -1,12 +1,15 @@
 from functions.loading_models import load_OpenAI_GPT4, load_Mistral_SMALL
 from langchain.schema import HumanMessage
 
-def get_openAI_requery(question):
+def get_openAI_requery(question, previous_questions):
     try:
         content = f"""
             # Question:
             "{question}"
             Given the above question, rephrase and expand it to help you do better answering.
+            # Previous questions:
+            <{previous_questions}>
+            You can use the previous questions to better understand the question.
             Maintain all information in the original question.
             Only write the rephrased question and in english.
             YOUR ANSWER:
@@ -22,12 +25,15 @@ def get_openAI_requery(question):
         print(e)
         return question
 
-def get_mistral_requery(question):
+def get_mistral_requery(question, previous_questions):
     try:
         content = f"""
             # Question:
             "{question}"
             Given the above question, rephrase and expand it to help you do better answering.
+            # Previous questions:
+            <{previous_questions}>
+            You can use the previous questions to better understand the question.
             Maintain all information in the original question.
             Only write the rephrased question and in english.
             YOUR ANSWER:

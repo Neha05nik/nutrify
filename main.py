@@ -1,10 +1,7 @@
 ﻿import streamlit as st
 
-from langchain.prompts import ChatPromptTemplate
-from functions.loading_models import *
-from functions.loading_promp import *
 from functions.loading_vector import *
-from functions.get_answer import *
+from functions.get_answer import get_answer
 from functions.s3_files_functions import *
 
 from functions.gdpr_compliance import run_compliance_modal
@@ -325,28 +322,9 @@ if st.session_state.login or st.session_state.without_loggin_button:
                                 """
     )
 
-    answer_AI_type = st.sidebar.radio('**Nutrional_AI answers:**',["Short", "Summary", "Long and precise"], 
-                            help="""
-                                All answers will be generated with scientific knowledge with the purpose 
-                                to promote better food consumption.  
-
-                                **Short**: The answers will be short and concise.  
-
-                                **Summary**: The answers will be given by bullet points.  
-
-                                **Long and precise**: The answers will be extensive.
-                                """
-    )
-
     language_AI = st.sidebar.selectbox('**Language:**', ['AUTO-DETECT', 'ENGLISH', 'FRENCH', 'GERMAN', 'SPANISH', 'ITALIAN'],
                                     help="""
                                     Nutritional AI should be able to auto-detect the language from the list.
-                                    """)
-    
-
-    memory_AI = st.sidebar.checkbox('Use memory',
-                                    help="""
-                                    Nutritional AI is keeping your previous questions in memory.
                                     """)
 
     citing_sources_AI = st.sidebar.checkbox('Cite sources',
@@ -438,36 +416,6 @@ if st.session_state.login or st.session_state.without_loggin_button:
                 container = st.sidebar.container()
                 container.error("Reload the page to see the previous conversations")
 
-    prompt = load_prompt(answer_AI_type, answer_AI_persona)
-
-    prompt += """
-            CONTEXT:
-            {context}
-
-            PREVIOUS QUERIES:
-            {previous_queries}
-
-            GIVE YOUR ANSWER IN: 
-            {language_query}
-
-            QUERY:
-            {query}
-
-            YOUR ANSWER:"""
-    # We have the prompt, then the context and finally the user question
-    #prompt = ChatPromptTemplate.from_messages([("system", prompt)])
-    prompt = ChatPromptTemplate.from_template(prompt)
-    # Special prompting for gpt
-    if engine_AI == "gpt-3.5-turbo":    
-        # We load the chatmodel GPT
-        chat_model = load_chat_model()
-
-    elif engine_AI == 'Mistral-7B-v0.2':
-        # We load the chatmodel Mistral
-        chat_model = load_Mistral_TINY()
-        #chat_model = load_client_mistral()
-
-
     # Start with empty messages, stored in session state
     if 'messages' not in st.session_state:
        st.session_state.messages = []
@@ -502,14 +450,8 @@ if st.session_state.login or st.session_state.without_loggin_button:
 
            st.session_state.first_question = True
        
-           # We store the new question
+           # We store the new question in memory
            st.session_state.memory_questions += question 
-
-           # We check if "use memory" is checked
-           if memory_AI:
-               previous_questions = st.session_state.memory_questions
-           else:
-               previous_questions = ""
        
            # Store the user's question in a session object for redrawing next time
            st.session_state.messages.append({"role": "human", "content": question})
@@ -522,7 +464,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
            with st.chat_message('assistant'):
                response_placeholder = st.empty()
 
-               answer, PmIDS = get_answer(engine_AI, prompt, chat_model, vector_store, retriever, question, previous_questions, response_placeholder, language_AI)
+               answer, PmIDS = get_answer(engine_AI, answer_AI_persona, vector_store, retriever, question, st.session_state.memory_questions, response_placeholder, language_AI)
 
             # We expose the sources used by Nutritional AI to formulate it's answer
            if citing_sources_AI:

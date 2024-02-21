@@ -14,7 +14,7 @@ except Exception as e:
 
 # Cache OpenAI Chat Model 3.5 for future runs
 @st.cache_resource()
-def load_chat_model():
+def load_gpt3_model():
    return ChatOpenAI(
        openai_api_key=OPENAI_API_KEY,
        temperature=0.4,

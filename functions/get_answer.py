@@ -4,7 +4,8 @@ from langchain.callbacks.base import BaseCallbackHandler
 from functions.retriever_abstracts import small_to_big, reranker_abstracts, return_abtracts_from_documents
 from functions.generate_question import get_mistral_requery, get_openAI_requery
 from functions.language_dectection import detect_language
-from functions.loading_models import load_Mistral_TINY
+from functions.loading_models import load_Mistral_TINY, load_gpt3_model
+from functions.loading_promp import load_prompt
 
 # Streaming call back handler for responses
 class StreamHandler(BaseCallbackHandler):
@@ -18,7 +19,7 @@ class StreamHandler(BaseCallbackHandler):
        self.container.markdown(self.text + "▌")
 
 # Generate the answer depending of Chat Model
-def get_answer(engine_AI, prompt, chat_model, vector_store, retriever, query, previous_queries, response_placeholder, language_AI):
+def get_answer(engine_AI, answer_AI_persona, vector_store, retriever, query, previous_queries, response_placeholder, language_AI):
 
     # We detect the language of the query
     if language_AI == "AUTO-DETECT":
@@ -27,14 +28,24 @@ def get_answer(engine_AI, prompt, chat_model, vector_store, retriever, query, pr
     else:
         language_query = language_AI
         
+    
+    # We load the prompt
+    prompt = load_prompt(answer_AI_persona)
+    
+    prompt = ChatPromptTemplate.from_template(prompt)
+
     if engine_AI == "gpt-3.5-turbo":
         # We get a new query, generate by GPT-4 model
-        query = get_openAI_requery(query)
+        query = get_openAI_requery(query, previous_queries)
+        # We load the chatmodel GPT
+        chat_model = load_gpt3_model()
 
     elif engine_AI == 'Mistral-7B-v0.2':
        # We get a new query, generate by mistral small model
-       query = get_mistral_requery(query)
-        
+       query = get_mistral_requery(query, previous_queries)
+       # We load the chatmodel Mistral
+       chat_model = load_Mistral_TINY()
+       
         # In case it takes too long to have an answer.
         # It helps the user to know an answer is coming
     response_placeholder.markdown("Nutritional AI is thinking about your question...▌")
@@ -56,8 +67,8 @@ def get_answer(engine_AI, prompt, chat_model, vector_store, retriever, query, pr
         abstracts = str([doc.page_content for doc in context])
         PmIDS = [doc.metadata.get("PmID") for doc in context]
 
-    response = chain.invoke({'context': abstracts, 
-                        'previous_queries': previous_queries, 
+    response = chain.invoke({'abstracts': abstracts, 
+                        #'previous_queries': previous_queries, 
                         'language_query': language_query,
                         'query': query}, 
                         config={'callbacks': [StreamHandler(response_placeholder)]})
