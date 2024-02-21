@@ -63,7 +63,7 @@ markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 marshmallow==3.20.2
 mdurl==0.1.2
-mistralai==0.0.12
+mistralai==0.0.11
 multidict==6.0.5
 mypy-extensions==1.0.0
 nest-asyncio==1.6.0
