@@ -337,6 +337,13 @@ if st.session_state.login or st.session_state.without_loggin_button:
                                 **Long and precise**: The answers will be extensive.
                                 """
     )
+
+    language_AI = st.sidebar.selectbox('**Language:**', ['AUTO-DETECT', 'ENGLISH', 'FRENCH', 'GERMAN', 'SPANISH', 'ITALIAN'],
+                                    help="""
+                                    Nutritional AI should be able to auto-detect the language from the list.
+                                    """)
+    
+
     memory_AI = st.sidebar.checkbox('Use memory',
                                     help="""
                                     Nutritional AI is keeping your previous questions in memory.
@@ -514,19 +521,15 @@ if st.session_state.login or st.session_state.without_loggin_button:
            with st.chat_message('assistant'):
                response_placeholder = st.empty()
 
-               answer = get_answer(engine_AI, prompt, chat_model, vector_store, retriever, question, previous_questions, response_placeholder)
+               answer, PmIDS = get_answer(engine_AI, prompt, chat_model, vector_store, retriever, question, previous_questions, response_placeholder, language_AI)
 
+            # We expose the sources used by Nutritional AI to formulate it's answer
            if citing_sources_AI:
-               # We extract the closest data from our database to the question
-               sources = vector_store.similarity_search(question, k=10)
-
-               # We extract the pmids from the metadata and eliminate duplicatas
-               pmids = list(set([doc.metadata.get('PmID') for doc in sources]))
 
                answer += "  \n**You can find more informations in the following articles:**  \n"
        
                i = 0
-               for article in pmids:
+               for article in PmIDS:
                    if article and i < nb_article:
                        answer += f"https://pubmed.ncbi.nlm.nih.gov/{article}/  \n"
                        i += 1

@@ -41,12 +41,13 @@ def small_to_big(query, vector_store, documents):
 def return_abtracts_from_documents(documents):
     """
     We return the abstracts in a list
+    We return the PmID in a list
     """
     try:
-        return [document.page_content for document in documents]
+        return [document.page_content for document in documents], [document.metadata.get("PmID") for document in documents]
     except:
         try:
-            return documents.page_content
+            return documents.page_content, documents.metadata.get("PmID")
         except:
             return []
         

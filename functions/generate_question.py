@@ -31,13 +31,13 @@ def get_mistral_requery(client_mistral, question):
             Maintain all information in the original question.
             Return only the rephrased question and in english.
         """
-
+        
         new_question = client_mistral.chat(
             model="mistral-small",
             messages=[ChatMessage(role="user", content=content)],
             temperature=0.4
                 )
-        return new_question.choices[0].message.content
+        return question#new_question.choices[0].message.content
     
     except Exception as e: 
         print(e)
