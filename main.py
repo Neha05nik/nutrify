@@ -440,9 +440,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
 
     prompt = load_prompt(answer_AI_type, answer_AI_persona)
 
-    # Special prompting for gpt
-    if engine_AI == "gpt-3.5-turbo":
-        prompt += """
+    prompt += """
             CONTEXT:
             {context}
 
@@ -456,15 +454,18 @@ if st.session_state.login or st.session_state.without_loggin_button:
             {query}
 
             YOUR ANSWER:"""
-        # We have the prompt, then the context and finally the user question
-        prompt = ChatPromptTemplate.from_messages([("system", prompt)])
-    
+    # We have the prompt, then the context and finally the user question
+    #prompt = ChatPromptTemplate.from_messages([("system", prompt)])
+    prompt = ChatPromptTemplate.from_template(prompt)
+    # Special prompting for gpt
+    if engine_AI == "gpt-3.5-turbo":    
         # We load the chatmodel GPT
         chat_model = load_chat_model()
 
     elif engine_AI == 'Mistral-7B-v0.2':
         # We load the chatmodel Mistral
-        chat_model = load_client_mistral()
+        chat_model = load_Mistral_TINY()
+        #chat_model = load_client_mistral()
 
 
     # Start with empty messages, stored in session state
