@@ -118,7 +118,7 @@ def load_vector_store(astra_key, astra_token, collection, embedding_type):
     # Selection of the embedding
     # Difference in the dimension's size
     if embedding_type == "OpenAi": #1536 dimensions
-        embeddings = OpenAIEmbeddings()
+        embeddings = OpenAIEmbeddings(model = "text-embedding-3-small")
     elif embedding_type == "all-MiniLM-l6-v2": #384 dimensions
         embeddings = HuggingFaceInferenceAPIEmbeddings(
             api_key=HF_API_KEY, 
