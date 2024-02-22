@@ -426,6 +426,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
     example_question = False
 
     # Draw a title and some markdown
+    st.warning("Occasionally, a bug may occur where Nutritional AI fails to process the question. If this happens, please try asking again.")
     st.title("Your personal nutritional AI")
     st.markdown("""Your generative AI will guide you in your nutritional choice!""")
 
