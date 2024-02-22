@@ -1,12 +1,15 @@
 import streamlit as st
 from langchain_community.vectorstores import AstraDB
 from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain_community.embeddings import VoyageEmbeddings
 
 try:
     ASTRA_API_ENDPOINT = st.secrets["ASTRA_API_ENDPOINT"]
     ASTRA_TOKEN = st.secrets["ASTRA_TOKEN"]
     HF_API_KEY = st.secrets["HF_API_KEY"]
-    ASTRA_COLLECTION  =  st.secrets["ASTRA_COLLECTION"]
+    ASTRA_COLLECTION_384  =  st.secrets["ASTRA_COLLECTION_384"]
+    ASTRA_COLLECTION_1024  =  st.secrets["ASTRA_COLLECTION_1024"]
+    VOYAGE_API_KEY = st.secrets["VOYAGE_API_KEY"]
 
 except Exception as e:
     print(e)
@@ -15,14 +18,23 @@ except Exception as e:
 @st.cache_resource(show_spinner='Loading of the database')
 def load_vector_store():
     
-    vector_store = AstraDB(
-    # We use the embeddings, it is free of charge
-    embedding=HuggingFaceInferenceAPIEmbeddings(
-            api_key=HF_API_KEY, 
-            model_name="sentence-transformers/all-MiniLM-l6-v2"),
-    collection_name=ASTRA_COLLECTION,
-    api_endpoint=ASTRA_API_ENDPOINT,
-    token=ASTRA_TOKEN)
+    # We load at first the more complete model.
+    try:
+        vector_store = AstraDB(
+        embedding=VoyageEmbeddings(voyage_api_key=VOYAGE_API_KEY),
+        collection_name=ASTRA_COLLECTION_1024,
+        api_endpoint=ASTRA_API_ENDPOINT,
+        token=ASTRA_TOKEN)
+
+    except:
+        vector_store = AstraDB(
+        # We use the embeddings, it is free of charge
+        embedding=HuggingFaceInferenceAPIEmbeddings(
+                api_key=HF_API_KEY, 
+                model_name="sentence-transformers/all-MiniLM-l6-v2"),
+        collection_name=ASTRA_COLLECTION_384,
+        api_endpoint=ASTRA_API_ENDPOINT,
+        token=ASTRA_TOKEN)
 
     return vector_store
 
