@@ -183,6 +183,41 @@ def preparation_corpus(df_corpus, pmids):
     # We return the prepared document and the list of new articles added 
     return document_chunks, list(clean_df_corpus["PmID"].unique())
 
+def testing_mesh_words(prepared_query):
+    """
+    Function: Test if the selected MeSH return any result
+    arg: List of MeSH queries
+    return: list of correct MeSH queries
+    """
+    
+    good_mesh = []
+    bad_mesh = []
+
+    print("\n____Testing MeSH words____\n")
+    
+    for query in prepared_query:
+        # We test for the return of one article
+        publication_ids, web_key = perform_esearch_ids(query, NCBI_API_KEY, sort_by="relevance", retmax=1)
+        
+        # If we get something, we add it to the list
+        if len(publication_ids) == 1:
+            good_mesh.append(query)
+        else:
+            bad_mesh.append(query)
+
+    if len(bad_mesh) > 0:
+        print("\n____Failed MeSH_____\n")
+        for query in bad_mesh:
+            print(query)
+    else:
+        print("\nNo failed MeSH\n")
+
+    # We return the good MeSH words
+    return good_mesh
+
+
+
+
 # We load the vector store
 vector_store = load_vector_store("voyageai")
 
@@ -203,25 +238,31 @@ while(query != "quit"):
 
     if query != 'quit':
         prepared_query = prepare_queries(query)
-       
-        for query in prepared_query:
-            print("Searching articles with this query:", query)
 
-            # We prepare the corpus before sending to AstraDatabase
-            prepared_documents, new_pmids = preparation_corpus(get_articles(query, 100), pmids_list)
+        # We test the queries
+        prepared_query = testing_mesh_words(prepared_query)
 
-            #If no new articles, we pass
-            if new_pmids==0:
-                continue
+        proceeding = input("\nContinue (y/n): ")
+        
+        if proceeding == "y":
+            for query in prepared_query:
+                print("Searching articles with this query:", query)
 
-            #We add the new pmids to the list
-            pmids_list.extend(new_pmids)
+                # We prepare the corpus before sending to AstraDatabase
+                prepared_documents, new_pmids = preparation_corpus(get_articles(query, 100), pmids_list)
 
-            # We add the documents to the vector store
-            print("Loading documents to AstraDB...")
-            vector_store.add_documents(prepared_documents, batch_size = 20)
-            
-            print(f"{len(new_pmids)} new articles added to AstraDB")
+                #If no new articles, we pass
+                if new_pmids==0:
+                    continue
+
+                #We add the new pmids to the list
+                pmids_list.extend(new_pmids)
+
+                # We add the documents to the vector store
+                print("Loading documents to AstraDB...")
+                vector_store.add_documents(prepared_documents, batch_size = 20)
+                
+                print(f"{len(new_pmids)} new articles added to AstraDB")
 
 
 
