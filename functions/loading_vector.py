@@ -21,7 +21,9 @@ def load_vector_store():
     # We load at first the more complete model.
     try:
         vector_store = AstraDB(
-        embedding=VoyageEmbeddings(voyage_api_key=VOYAGE_API_KEY),
+        embedding=VoyageEmbeddings(voyage_api_key=VOYAGE_API_KEY,
+                                      model = "voyage-02",
+                                      voyage_api_base= 'https://api.voyageai.com/v1/embeddings'),
         collection_name=ASTRA_COLLECTION_1024,
         api_endpoint=ASTRA_API_ENDPOINT,
         token=ASTRA_TOKEN)
