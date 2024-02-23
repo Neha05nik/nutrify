@@ -29,13 +29,17 @@ def load_vector_store(embedding_type = "all-MiniLM-l6-v2"):
     # Selection of the embedding
     # Difference in the dimension's size
     if embedding_type == "OpenAi": #1536 dimensions
-        embeddings = OpenAIEmbeddings(model = "text-embedding-3-small")
+        embeddings = OpenAIEmbeddings(api_key=OPENAI_API_KEY,
+                                      model = "text-embedding-3-small")
     elif embedding_type == "all-MiniLM-l6-v2": #384 dimensions
         embeddings = HuggingFaceInferenceAPIEmbeddings(
             api_key=HF_API_KEY, 
             model_name="sentence-transformers/all-MiniLM-l6-v2")
     elif embedding_type == "voyageai": #1024 dimensions
-        embeddings = VoyageEmbeddings(voyage_api_key=VOYAGE_API_KEY)
+        embeddings = VoyageEmbeddings(voyage_api_key=VOYAGE_API_KEY,
+                                      model = "voyage-02",
+                                      voyage_api_base= 'https://api.voyageai.com/v1/embeddings')
+        
 
     print("Connecting to AstraDB...")
     
@@ -98,8 +102,8 @@ def get_pmids_db():
 
     print(f"There are {len(pmids)} uniques articles in the database")
 
-    # We return the list of pmIDs
-    return pmids
+    # We return the list of pmIDs and the collection
+    return pmids, collection
 
 def prepare_queries(query):
     """
@@ -197,7 +201,7 @@ def testing_mesh_words(prepared_query):
     
     for query in prepared_query:
         # We test for the return of one article
-        publication_ids, web_key = perform_esearch_ids(query, NCBI_API_KEY, sort_by="relevance", retmax=1)
+        publication_ids, _ = perform_esearch_ids(query, NCBI_API_KEY, sort_by="relevance", retmax=1)
         
         # If we get something, we add it to the list
         if len(publication_ids) == 1:
@@ -219,14 +223,16 @@ def testing_mesh_words(prepared_query):
 
 
 # We load the vector store
+#vector_store = load_vector_store("OpenAi")
 vector_store = load_vector_store("voyageai")
 
 # We retrieve the list of pmids already in the database
-pmids_list = get_pmids_db()
+pmids_list, collection = get_pmids_db()
 
 query = ""
 
 print("\n_____WRITE 'quit' to stop______")
+print("\n_____WRITE 'delete' to erase everything in the collection______")
 print("_____Single search e.g.'[catechin]'______")
 print("_____Multiple searchs e.g.'[catechin,proteins]'______")
 print("_____Multiple MeSH searchs e.g.'[catechin];[microbiota]'______\n")
@@ -236,7 +242,7 @@ while(query != "quit"):
        
     query = input("\nEnter a MeSH term to search in NCBI database: ")
 
-    if query != 'quit':
+    if query != 'quit' and query != 'delete':
         prepared_query = prepare_queries(query)
 
         # We test the queries
@@ -263,6 +269,13 @@ while(query != "quit"):
                 vector_store.add_documents(prepared_documents, batch_size = 20)
                 
                 print(f"{len(new_pmids)} new articles added to AstraDB")
+
+    # To delete the files in the collection
+    elif query == 'delete':
+        collection.delete_many(filter={})
+        # We empty the list
+        pmids_list = []
+        print("\n------All the documents in the collection have been deleted-------\n")
 
 
 
