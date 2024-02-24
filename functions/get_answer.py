@@ -1,7 +1,7 @@
 ﻿from langchain.schema.runnable import RunnableMap
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.callbacks.base import BaseCallbackHandler
-from functions.retriever_abstracts import small_to_big, reranker_abstracts, return_abtracts_from_documents
+from functions.retriever_abstracts import small_to_big, reranker_abstracts, return_abtracts_from_documents, return_pmids_from_documents
 from functions.generate_question import get_mistral_requery, get_openAI_requery
 from functions.language_dectection import detect_language
 from functions.loading_models import load_Mistral_TINY, load_gpt3_model
@@ -19,7 +19,7 @@ class StreamHandler(BaseCallbackHandler):
        self.container.markdown(self.text + "▌")
 
 # Generate the answer depending of Chat Model
-def get_answer(engine_AI, answer_AI_persona, vector_store, retriever, query, previous_queries, response_placeholder, language_AI):
+def get_answer(engine_AI, answer_AI_persona, collection, retriever, query, previous_queries, response_placeholder, language_AI):
 
     # We detect the language of the query
     if language_AI == "AUTO-DETECT":
@@ -56,14 +56,21 @@ def get_answer(engine_AI, answer_AI_persona, vector_store, retriever, query, pre
     context = retriever.get_relevant_documents(query)
 
     try:
-        # We search for full abtract
-        full_documents = small_to_big(query, vector_store, context)
+        # We search for full abstract
+        full_documents = small_to_big(collection, context)
+        
         # We rerank the documents
         reranked_documents = reranker_abstracts(query, full_documents)
-        # We add metadatas
-        abstracts, PmIDS = str(return_abtracts_from_documents(reranked_documents))
         
-    except:
+        # We retrieve the abstracts and PmIDS
+        abstracts = str(return_abtracts_from_documents(reranked_documents))
+        PmIDS = return_pmids_from_documents(reranked_documents)
+        
+    except Exception as e:
+        # In case there is a failure
+        print("Failed to execute a step in small-to-big/rerank/return_abstract")
+        print("Error:", e)
+
         abstracts = str([doc.page_content for doc in context])
         PmIDS = [doc.metadata.get("PmID") for doc in context]
 

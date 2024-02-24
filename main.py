@@ -465,7 +465,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
            with st.chat_message('assistant'):
                response_placeholder = st.empty()
 
-               answer, PmIDS = get_answer(engine_AI, answer_AI_persona, vector_store, retriever, question, st.session_state.memory_questions, response_placeholder, language_AI)
+               answer, PmIDS = get_answer(engine_AI, answer_AI_persona, collection, retriever, question, st.session_state.memory_questions, response_placeholder, language_AI)
 
             # We expose the sources used by Nutritional AI to formulate it's answer
            if citing_sources_AI:

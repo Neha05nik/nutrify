@@ -3,14 +3,12 @@ import streamlit as st
 
 COHERENCE_API_KEY = st.secrets["COHERENCE_API_KEY"]
 
-def small_to_big(query, vector_store, documents):
+def small_to_big(collection, documents):
     """
     Return full documents after first extraction
     args:
-        query: The same query as the one used for the documents
-        vector_search: The database we use
+        collection: The collection we use
         documents: documents that were extracted with the first step
-    
     """
     
     # We extract the PmID from the documents
@@ -22,34 +20,56 @@ def small_to_big(query, vector_store, documents):
     # To store the new documents
     full_documents = []
     
-    chunks = []
-    
     # We look through the PmIDs
     for article_PmID in PmID_full_sources:
         # We retrieve all documents linked to the PmID
-        chunks = vector_store.similarity_search(query, filter={"PmID": article_PmID})
-        # We eliminate duplicates
-        chunks = in_case_duplicates(chunks)
+        chunk = collection.find({"metadata.PmID": article_PmID})
         # We reduce to one document with the full abstract
-        chunk = reduce_document(chunks)
+        
+        if len(chunk['data']['documents']) > 1:
+            chunk = reduce_document(chunk)
         
         # We extend the full_documents
         full_documents.append(chunk)
 
     return full_documents
-
+        
 def return_abtracts_from_documents(documents):
     """
     We return the abstracts in a list
-    We return the PmID in a list
     """
     try:
-        return [document.page_content for document in documents], [document.metadata.get("PmID") for document in documents]
+        return [document.page_content for document in documents]
     except:
         try:
-            return documents.page_content, documents.metadata.get("PmID")
+            return documents.page_content
         except:
-            return []
+            try:
+                return [doc['content'] for document in documents for doc in document['data']['documents']]
+            except:
+                try:
+                    return [document['content'] for document in documents['data']['documents']]
+                except:
+                    return []
+                
+def return_pmids_from_documents(documents):
+    """
+    We return the abstracts in a list
+    """
+    try:
+        return [document.metadata.get("PmID") for document in documents]
+    except:
+        try:
+            return documents.metadata.get("PmID")
+        except:
+            try:
+                return [doc['metadata']['PmID'] for document in documents for doc in document['data']['documents']]
+            except:
+                try:
+                    return [document['metadata']['PmID'] for document in documents['data']['documents']]
+                except:
+                    return []                
+
         
 def return_abtracts_from_documents_with_metadata(documents):
     """
@@ -70,6 +90,7 @@ def return_abtracts_from_documents_with_metadata(documents):
 def in_case_duplicates(documents):
     """
     To eliminate duplicates, we use the abstract
+    Not needed anymore, database shouldn't have any duplicates now
     """
     
     chunks_clean = []
@@ -84,14 +105,13 @@ def reduce_document(documents):
     To combine abstracts from the same PmID
     """
     # We use the first chunks as the base line
-    clean_chunk = documents[0]
+    clean_chunk = {'data':{'documents':[documents['data']['documents'][0]]}}
     
     # We extract all the chunks abstracts
     abstracts = return_abtracts_from_documents(documents)
     
     # We modify the abstract with the concatenate version
-    
-    clean_chunk.page_content = abstracts[0]
+    clean_chunk['data']['documents'][0]['content'] = ','.join(abstracts)
         
     # We return it
     return clean_chunk
@@ -107,7 +127,7 @@ def reranker_abstracts(query, documents, th=0.1, k=None):
     
     # We extract the abstracts
     abstracts = return_abtracts_from_documents(documents)
-    
+
     k = k if k else len(abstracts)
     
     rerank_docs = co.rerank(
@@ -125,7 +145,6 @@ def reranker_abstracts(query, documents, th=0.1, k=None):
         
         # If superior to the threshold we keep it
         if re_rank_files.relevance_score > th:
-            
             reranked_documents.append(documents[re_rank_files.index])
     
     # We return the reranked documents
