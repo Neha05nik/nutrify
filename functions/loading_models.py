@@ -1,5 +1,4 @@
 import streamlit as st
-from langchain_community.chat_models.huggingface import ChatHuggingFace
 from langchain_openai import ChatOpenAI
 from langchain_mistralai.chat_models import ChatMistralAI
 

@@ -4,14 +4,12 @@ from functions.loading_vector import *
 from functions.get_answer import get_answer
 from functions.s3_files_functions import *
 
-from functions.gdpr_compliance import run_compliance_modal
 from functions.loading_examples_questions import random_questions
 
-from functions.send_mail import send_email
-from streamlit_modal import Modal
+from functions.loading_history import loading_conversation_history
+from functions.authentification_menu import get_authentification_menu
+from functions.logged_sidebar_menu import loading_sidebar_menu
 
-from functions.gdpr_compliance import run_compliance_modal, get_compliance_message
-from functions.s3_authenticator import loading_authenticator, saving_configs
 
 try:
     QRCODE = st.secrets["QRCODE"]
@@ -19,9 +17,6 @@ try:
     S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
 except:
     print("Error loading qr_image")
-
-# We are loading the authenticator object and the config from the S3
-authenticator, config = loading_authenticator("nutritional_ai/config.yaml")
 
 # We check the parameters in the st.session_state
 authentification_buttons = ["login", "login_button", "register", "sign_up_button", "reset_pwd",
@@ -32,259 +27,9 @@ for auth_buttons in authentification_buttons:
         st.session_state[auth_buttons] = False
     else:
         st.session_state[auth_buttons] = st.session_state[auth_buttons]    
-    
-init_buttons = ["successful_registration", "successful_forgotten_pwd", "successful_reset_pwd", 
-                "compliance_message_bool", "option_menu", "new_conversation", "previous_conversation"]
 
-for init_b in init_buttons:
-    if init_b not in st.session_state:
-        st.session_state[init_b] = False
-
-# Just to show that the registration worked
-if st.session_state.successful_registration:
-    st.success('User registered successfully')
-    st.session_state.successful_registration = False
-
-# Just to show that the new password was sent
-if st.session_state.successful_forgotten_pwd:
-    st.success('New password sent to your email')
-    st.session_state.successful_forgotten_pwd = False
-
-# Just to show that the password was successfully modified
-if st.session_state.successful_reset_pwd:
-    st.success('Password modified successfully')
-    st.session_state.successful_reset_pwd = False
-
-# Show buttons before being logging or before "continue without logging" 
-bool_logging = not st.session_state.login and not st.session_state.without_loggin_button
-
-# When user wants to log in
-if bool_logging:
-    st.sidebar.title("Your personal nutritional AI")
-    st.sidebar.markdown("---")
-
-    if st.sidebar.button("**Log in**"):
-        st.session_state.login_button = True
-        st.session_state.sign_up_button = False
-        st.session_state.forgot_pwd_button = False
-        st.session_state.without_loggin_button = False
-        st.rerun()
-
-# When user wants to register
-if not st.session_state.register and bool_logging:
-    if st.sidebar.button("**Sign up**"):
-        st.session_state.login_button = False
-        st.session_state.sign_up_button = True
-        st.session_state.forgot_pwd_button = False
-        st.session_state.without_loggin_button = False
-        st.rerun()
-
-# When user forgot its password
-if not st.session_state.forgot_pwd and bool_logging:
-    if st.sidebar.button("**Forgot password**"):
-        st.session_state.login_button = False
-        st.session_state.sign_up_button = False
-        st.session_state.forgot_pwd_button = True
-        st.session_state.without_loggin_button = False
-        st.rerun()
-
-# When user forgot its password
-if bool_logging:
-    if st.sidebar.button("**Continue without logging**"):
-        st.session_state.login_button = False
-        st.session_state.sign_up_button = False
-        st.session_state.forgot_pwd_button = False
-        st.session_state.without_loggin_button = True
-        st.session_state.user_id = f"user_{generate_random_number()}"
-        st.rerun()
-
-    st.sidebar.markdown("---")
-
-# We launch the authenticator process
-if st.session_state.login_button:
-    authenticator.login()
-
-# When the credentials are correct, the authentification is done
-if st.session_state["authentication_status"] and st.session_state.login == False:
-    st.session_state.login = True
-    st.session_state.login_button = False
-    st.rerun()
-
-# If authentification failed
-elif st.session_state["authentication_status"] is False:
-    st.error('Email/password is incorrect')
-
-# When user is log in with or without credentials
-if st.session_state.login or st.session_state.without_loggin_button:
-
-    if "user_id" not in st.session_state:
-        if st.session_state.without_loggin_button:
-            # Generate a random user number
-            st.session_state.user_id = f"user_{generate_random_number()}"
-        else:
-            st.session_state.user_id = st.session_state["email"]
-            st.session_state.new_conversation = True
-
-            # We read the previous conversations
-            s3_key = f'logs/conversations/users/{st.session_state.user_id}'
-            st.session_state.previous_conversation = loading_s3_conversations(S3_BUCKET_NAME, s3_key)
-        
-    # We track the first part of the email if login else random user id
-    username = st.session_state["email"].split('@')[0] if st.session_state.login else st.session_state.user_id
-
-    st.sidebar.title(f'Welcome *{username}*')
-    
-    if st.session_state.option_menu:    
-        modal = Modal(
-        "Settings",
-        key="settings",
-        padding=20,
-        max_width=744
-        )
-        
-        with modal.container():
-            if st.session_state.login:
-                # Button to reset password
-                rst_pwd = st.button("**Reset password**")
-
-                if rst_pwd:
-                    st.session_state.option_menu = False
-                    # To launch the modification password form
-                    st.session_state.reset_pwd = True
-                    st.rerun()
-                    
-            change_consent = st.button("**Modify consent form**")
-            quitting_option = st.button("Continue")
-
-            # Solution for not working quitting with cross
-            if quitting_option:
-                st.session_state.option_menu = False
-                st.rerun()
-
-            if change_consent:
-                st.session_state.option_menu = False
-                # To relaunch the compliance message
-                if st.session_state.login:
-                    authenticator.set_credential_information(st.session_state["email"], 'compliance_message', False)
-                    st.session_state.compliance_button = False
-                    # We write the new user informations
-                    saving_configs(config, "nutritional_ai/config.yaml")
-                else:
-                    st.session_state.compliance_message = False
-                    st.session_state.compliance_button = False
-                st.rerun()
-
-    if st.session_state.login:
-
-        if st.session_state.reset_pwd:
-            try:
-                # Return true when password is correctly change
-                password_of_registered_user = authenticator.reset_password(st.session_state["email"])
-                if password_of_registered_user:
-                    st.session_state.reset_pwd = False
-                    # We write the new user informations
-                    saving_configs(config, "nutritional_ai/config.yaml")
-
-                    st.session_state.successful_reset_pwd = True
-
-                    st.rerun()
-            except Exception as e:
-                st.error(e)
-
-        # We check if the compliance_message was asked to the user, mandatory in the first connexion
-        try:
-            compliance_message = authenticator.get_credential_information(st.session_state["email"], 'compliance_message')
-            st.session_state.compliance_statut = authenticator.get_credential_information(st.session_state["email"], 'compliance_statut')
-        except:
-            # If error, and a compliance_message was not created or answered by the user, we relaunch the 
-            compliance_message = False
-
-        if not compliance_message:
-            authenticator.set_credential_information(st.session_state["email"], 
-                                                        'compliance_message', 
-                                                        True)
-            # Calling the function to execute the GDPR form
-            st.session_state.compliance_statut = run_compliance_modal()
-            if st.session_state.compliance_button:
-                authenticator.set_credential_information(st.session_state["email"], 
-                                                        'compliance_statut', 
-                                                    st.session_state.compliance_statut)
-        
-                st.session_state.compliance_message_bool = True
-
-                # We write the new user informations
-                saving_configs(config, "nutritional_ai/config.yaml")
-
-                st.rerun()
-
-    else: 
-        
-        # Calling the function to execute the GDPR form
-        st.session_state.compliance_statut = run_compliance_modal()
-
-        if st.session_state.compliance_button and not st.session_state.compliance_message:
-        
-            st.session_state.compliance_message_bool = True
-
-# When the user at hit the sign up button
-elif st.session_state.sign_up_button:
-    try:
-        email_of_registered_user = authenticator.register_user(preauthorization=False)
-        # The registration worked
-        if email_of_registered_user:
-
-            # By default, the compliance message is set to False
-            authenticator.set_credential_information(email_of_registered_user, 
-                                                    'compliance_message', 
-                                                    False)
-            # We write the new user informations
-            saving_configs(config, "nutritional_ai/config.yaml")
-
-            # Just to show that the registration was successful
-            st.session_state.successful_registration = True
-        
-            # Quitting the register mode and launching the login
-            st.session_state.sign_up_button = False
-            st.session_state.login_button = True
-            
-            st.rerun()
-    except Exception as e:
-        st.error(e)
-
-# When the user hit the forgotten button
-elif st.session_state.forgot_pwd_button:
-    try:
-        # We ask for the email used in the registration
-        email_of_forgotten_password, new_random_password = authenticator.forgot_password()
-        # If we have a successful email
-        if email_of_forgotten_password:
-            send_email(email_of_forgotten_password, new_random_password)
-            st.session_state.password = new_random_password
-            saving_configs(config, "nutritional_ai/config.yaml")
-
-            # Just to show that the new password was sent
-            st.session_state.successful_forgotten_pwd = True
-
-        elif email_of_forgotten_password == False:
-            st.error('Email not found')
-
-    except Exception as e:
-        st.error(e)
-
-
-# To display the compliance message True: accepted/ False: Refused
-if st.session_state.compliance_message_bool:
-
-    st.session_state.compliance_message = True
-    st.session_state.compliance_message_bool = False
-
-    if st.session_state.login:
-        compliance_statut = authenticator.get_credential_information(st.session_state["email"], 'compliance_statut')
-    else:
-        compliance_statut = st.session_state.compliance_statut
-
-    get_compliance_message(compliance_statut)
-
+# Generation the authentification menu (Logging, registration, continue without logging)
+get_authentification_menu()
 
 # When connected via login or without loggin
 if st.session_state.login or st.session_state.without_loggin_button:
@@ -312,143 +57,12 @@ if st.session_state.login or st.session_state.without_loggin_button:
     else:
         st.session_state.memory_questions = st.session_state.memory_questions
 
-    engine_AI = st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
+    # We load the sidebar buttons 
+    engine_AI, answer_AI_persona, language_AI, citing_sources_AI, nb_article = loading_sidebar_menu()
 
-    answer_AI_persona = st.sidebar.radio('**Nutrional_AI persona:**',["Normal", "Scientific", "Nutritional coach"], 
-                            help="""
-                                All answers will be generated with scientific knowledge with the purpose 
-                                to promote better food consumption.  
-
-                                **Normal**: It wants you to eat better foods. It will give you some anecdotes alongside.  
-
-                                **Scientific**: It wants you to eat better foods and with scientific reasoning.  
-
-                                **Nutritional coach**: It is your nutritional coach, nothing will satisfy him more than succeeding in convincing you in eating better foods.
-                                """
-    )
-
-    language_AI = st.sidebar.selectbox('**Language:**', ['AUTO-DETECT', 'ENGLISH', 'FRENCH', 'GERMAN', 'SPANISH', 'ITALIAN'],
-                                    help="""
-                                    Nutritional AI should be able to auto-detect the language from the list.
-                                    """)
-
-    citing_sources_AI = st.sidebar.checkbox('Cite sources',
-                                            help="""
-                                            Nutritional AI cites the articles on which the model based its answers
-                                            """)
-
-    if citing_sources_AI:
-        nb_article = st.sidebar.slider('Number of articles to cite', min_value=2, max_value=5, value = 3)
-
-    if st.sidebar.button("New conversation"):
-        # We store the messages, then empty the current conversation and restore the questions
-        st.session_state.history_messages.append([])
-        st.session_state.messages = []
-        st.session_state.random_example_questions = random_questions()
-        st.session_state.first_question = False
-        st.session_state.new_conversation = True
-
-    if st.sidebar.button("Donation"):
-        # Added a paypal link, to help maintain the models online
-        st.sidebar.image(QRCODE, width=200)
-        st.sidebar.link_button('Paypal link', url = QRCODE_LINK)
-        st.sidebar.markdown("""**If you find value in our service, consider supporting us with a small donation. 
-        Your contribution helps maintain the platform and fuels the development of new features. 
-        We appreciate your generosity – thank you for helping us thrive!**""")
-
-    # We open the Option menu if clicked on
-    if st.sidebar.button("Settings"):
-        st.session_state.option_menu = True
-        st.session_state.reset_pwd = False
-        st.rerun()
-
-    # Logout from account
-    if st.sidebar.button("**Log out**"):
-        # Restart the parameters for loging in or Signing in 
-        st.session_state.login = False
-        st.session_state.register = False
-        st.session_state["authentication_status"] = None
-        st.session_state.reset_pwd = False
-        st.session_state.messages = []
-        st.session_state.first_question = False
-        if st.session_state.without_loggin_button:
-            st.session_state.without_loggin_button = False
-            st.session_state.user_id = f"user_{generate_random_number()}"
-            st.session_state.compliance_button = False
-            st.session_state.compliance_message = False
-
-        st.rerun()
-
-    # Archived conversations only available if login
-    if st.session_state.login:
-        st.sidebar.markdown("---")
-        st.sidebar.title("Previous conversations")
-        st.sidebar.markdown("---")
-
-        if st.session_state.previous_conversation != None:
-            bool_timeline = [True, True, True, True]
-            try:
-                # We read from the most recent to oldest
-                for i, conversation in enumerate(st.session_state.previous_conversation[::-1]):
-                    # Each text is visible as a button
-                    title = return_conversation(conversation)[0]['content']
-                    time_conversation = return_dates(conversation)[0]
-
-                    # If the conversation is today's old
-                    if return_time_difference(time_conversation) == 0 and bool_timeline[0]:
-                        st.sidebar.subheader("Today's conversations")  
-                        bool_timeline[0] = False
-
-                    # If the conversation is one days' old
-                    elif return_time_difference(time_conversation) == 1 and bool_timeline[1]:
-                        st.sidebar.subheader("Yesterday's conversations")
-                        bool_timeline[1] = False
-
-                    # If the conversation is seven days' old
-                    elif return_time_difference(time_conversation) > 1 and return_time_difference(time_conversation) <= 30 and bool_timeline[2]:
-                        st.sidebar.subheader("Previous 7 days's conversations")
-                        bool_timeline[2] = False
-                    
-                    # If the conversation is thirty days' old
-                    elif return_time_difference(time_conversation) > 30 and bool_timeline[3]:
-                        st.sidebar.subheader("Previous 30 days's conversations")
-                        bool_timeline[3] = False
-
-                    # We display title and subtitle on two separate rows in the button
-                    if st.sidebar.button(f"{title}", key=i):
-                        # Upload the conversation when the button is clicked
-                        st.session_state.messages = return_conversation(conversation)
-                        st.session_state.first_question = True
-                        
-            except Exception as e:
-                # upload the log for bug 
-                upload_bug_to_s3(S3_BUCKET_NAME, str(e))
-                container = st.sidebar.container()
-                container.error("Reload the page to see the previous conversations")
-
-    elif st.session_state.without_loggin_button:
-
-        # We count the number of conversations started
-        nb_conversations = len(st.session_state.history_messages)
-        
-        # Show previous conversations if more than 1 started
-        if nb_conversations > 1:
-            st.sidebar.markdown("---")
-            st.sidebar.subheader("Previous conversations")  
-            st.sidebar.markdown("---")
-
-            # We read from the most recent to oldest
-            for i, conversation in enumerate(st.session_state.history_messages[::-1]):
-                # Each text is visible as a button
-                if conversation:
-                    title = conversation[0]['content']
-
-                    # We display title and subtitle on two separate rows in the button
-                    if st.sidebar.button(f"{title}", key=i):
-                        # Upload the conversation when the button is clicked
-                        st.session_state.messages = st.session_state.history_messages[nb_conversations -1 - i]
-                        st.session_state.first_question = True
-
+    # We load the conversation history 
+    loading_conversation_history()
+            
     # Start with empty messages, stored in session state
     if 'messages' not in st.session_state:
        st.session_state.messages = []
@@ -485,8 +99,8 @@ if st.session_state.login or st.session_state.without_loggin_button:
            st.session_state.first_question = True
        
            # We store the new question in memory
-           st.session_state.memory_questions += question 
-       
+           memory_questions = " ".join(return_questions(st.session_state.messages))
+           
            # Store the user's question in a session object for redrawing next time
            st.session_state.messages.append({"role": "human", "content": question})
 
@@ -498,7 +112,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
            with st.chat_message('assistant'):
                response_placeholder = st.empty()
 
-               answer, PmIDS = get_answer(engine_AI, answer_AI_persona, collection, retriever, question, st.session_state.memory_questions, response_placeholder, language_AI)
+               answer, PmIDS = get_answer(engine_AI, answer_AI_persona, collection, retriever, question, memory_questions, response_placeholder, language_AI)
 
             # We expose the sources used by Nutritional AI to formulate it's answer
            if citing_sources_AI:

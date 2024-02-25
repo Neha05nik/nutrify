@@ -67,6 +67,10 @@ def return_conversation(conversations):
         conversation.append({"role": "ai", "content": conv['chatbot']})
     return conversation
 
+# Return the list of user's question in the current conversation
+def return_questions(conversation):
+    return [message['content'] for message in conversation if message['role']=='human']
+
 # Return the timestamp
 def return_dates(conversations): 
     dates = []
