@@ -10,23 +10,14 @@ from functions.loading_history import loading_conversation_history
 from functions.authentification_menu import get_authentification_menu
 from functions.logged_sidebar_menu import loading_sidebar_menu
 
-
-try:
-    QRCODE = st.secrets["QRCODE"]
-    QRCODE_LINK = st.secrets["QRCODE_LINK"]
-    S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
-except:
-    print("Error loading qr_image")
+S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
 
 # We check the parameters in the st.session_state
 authentification_buttons = ["login", "login_button", "register", "sign_up_button", "reset_pwd",
                             "forgot_pwd", "forgot_pwd_button", "continue_without_logging", "without_loggin_button"]
 
 for auth_buttons in authentification_buttons:
-    if auth_buttons not in st.session_state:
-        st.session_state[auth_buttons] = False
-    else:
-        st.session_state[auth_buttons] = st.session_state[auth_buttons]    
+    st.session_state[auth_buttons] = st.session_state.get(auth_buttons, False)
 
 # Generation the authentification menu (Logging, registration, continue without logging)
 get_authentification_menu()
@@ -35,27 +26,15 @@ get_authentification_menu()
 if st.session_state.login or st.session_state.without_loggin_button:
 
     # Variable to keep the conversation between user and bot
-    if "stock_messages" not in st.session_state:
-        st.session_state.stock_messages = []
-    else:
-        st.session_state.stock_messages = st.session_state.stock_messages
+    st.session_state.stock_messages = st.session_state.get('stock_messages', [])
 
-    if "history_messages" not in st.session_state:
-        st.session_state.history_messages = [[]]
-    else:
-        st.session_state.history_messages =  st.session_state.history_messages
+    st.session_state.history_messages = st.session_state.get('history_messages', [[]])
 
     # Generate the example question
-    if "random_example_questions" not in st.session_state:
-        st.session_state.random_example_questions = random_questions()
-    else:
-        st.session_state.random_example_questions = st.session_state.random_example_questions
+    st.session_state.random_example_questions = st.session_state.get('random_example_questions', random_questions())
 
     # Keep the previous questions in memory
-    if "memory_questions" not in st.session_state:
-        st.session_state.memory_questions = ""
-    else:
-        st.session_state.memory_questions = st.session_state.memory_questions
+    st.session_state.memory_questions = st.session_state.get('memory_questions', '')
 
     # We load the sidebar buttons 
     engine_AI, answer_AI_persona, language_AI, citing_sources_AI, nb_article = loading_sidebar_menu()
@@ -156,7 +135,8 @@ if st.session_state.login or st.session_state.without_loggin_button:
            st.rerun()
        except Exception as e:
            # If an error occur
-           st.session_state.messages.append({"role": "ai", "content": st.error("An error was detected, retry with another setup or question. Sorry for the inconvenience")})
+           st.session_state.messages.append({"role": "ai", 
+                                             "content": st.error("An error was detected, retry with another setup or question. Sorry for the inconvenience")})
            # Upload error to S3 bucket for further investigation
            upload_bug_to_s3(S3_BUCKET_NAME, str(e))
 

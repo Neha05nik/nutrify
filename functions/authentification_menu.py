@@ -18,8 +18,9 @@ def get_authentification_menu():
                 "compliance_message_bool", "option_menu", "new_conversation", "previous_conversation"]
 
     for init_b in init_buttons:
-        if init_b not in st.session_state:
-            st.session_state[init_b] = False
+        st.session_state[init_b] = st.session_state.get(init_b, False)
+        #if init_b not in st.session_state:
+         #   st.session_state[init_b] = False
 
     # Just to show that the registration worked
     if st.session_state.successful_registration:

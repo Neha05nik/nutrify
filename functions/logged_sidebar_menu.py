@@ -1,4 +1,11 @@
 import streamlit as st
+from functions.loading_examples_questions import random_questions
+
+try:
+    QRCODE = st.secrets["QRCODE"]
+    QRCODE_LINK = st.secrets["QRCODE_LINK"]
+except:
+    print("Error loading qr_image")
 
 def loading_sidebar_menu():
     engine_AI = st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
