@@ -246,7 +246,7 @@ elif st.session_state.sign_up_button:
             # Quitting the register mode and launching the login
             st.session_state.sign_up_button = False
             st.session_state.login_button = True
-
+            
             st.rerun()
     except Exception as e:
         st.error(e)
