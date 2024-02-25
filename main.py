@@ -286,14 +286,19 @@ if st.session_state.compliance_message_bool:
     get_compliance_message(compliance_statut)
 
 
-# When connected
+# When connected via login or without loggin
 if st.session_state.login or st.session_state.without_loggin_button:
 
-    # Variable to keep the conversation
+    # Variable to keep the conversation between user and bot
     if "stock_messages" not in st.session_state:
         st.session_state.stock_messages = []
     else:
         st.session_state.stock_messages = st.session_state.stock_messages
+
+    if "history_messages" not in st.session_state:
+        st.session_state.history_messages = [[]]
+    else:
+        st.session_state.history_messages =  st.session_state.history_messages
 
     # Generate the example question
     if "random_example_questions" not in st.session_state:
@@ -301,7 +306,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
     else:
         st.session_state.random_example_questions = st.session_state.random_example_questions
 
-    # Keep the previous question in memory
+    # Keep the previous questions in memory
     if "memory_questions" not in st.session_state:
         st.session_state.memory_questions = ""
     else:
@@ -314,11 +319,11 @@ if st.session_state.login or st.session_state.without_loggin_button:
                                 All answers will be generated with scientific knowledge with the purpose 
                                 to promote better food consumption.  
 
-                                **Normal**: It wants you to eat better foods.  
+                                **Normal**: It wants you to eat better foods. It will give you some anecdotes alongside.  
 
-                                **Scientific**: It wants you to eat better foods and with reasoning.  
+                                **Scientific**: It wants you to eat better foods and with scientific reasoning.  
 
-                                **Nutritional coach**: It is your coach, nothing will satisfy him more than succeeding in having better food decisions.
+                                **Nutritional coach**: It is your nutritional coach, nothing will satisfy him more than succeeding in convincing you in eating better foods.
                                 """
     )
 
@@ -336,7 +341,8 @@ if st.session_state.login or st.session_state.without_loggin_button:
         nb_article = st.sidebar.slider('Number of articles to cite', min_value=2, max_value=5, value = 3)
 
     if st.sidebar.button("New conversation"):
-        # We empty the conversation and restore the questions
+        # We store the messages, then empty the current conversation and restore the questions
+        st.session_state.history_messages.append([])
         st.session_state.messages = []
         st.session_state.random_example_questions = random_questions()
         st.session_state.first_question = False
@@ -388,25 +394,29 @@ if st.session_state.login or st.session_state.without_loggin_button:
                     title = return_conversation(conversation)[0]['content']
                     time_conversation = return_dates(conversation)[0]
 
+                    # If the conversation is today's old
                     if return_time_difference(time_conversation) == 0 and bool_timeline[0]:
                         st.sidebar.subheader("Today's conversations")  
                         bool_timeline[0] = False
 
+                    # If the conversation is one days' old
                     elif return_time_difference(time_conversation) == 1 and bool_timeline[1]:
                         st.sidebar.subheader("Yesterday's conversations")
                         bool_timeline[1] = False
 
+                    # If the conversation is seven days' old
                     elif return_time_difference(time_conversation) > 1 and return_time_difference(time_conversation) <= 30 and bool_timeline[2]:
                         st.sidebar.subheader("Previous 7 days's conversations")
                         bool_timeline[2] = False
-
+                    
+                    # If the conversation is thirty days' old
                     elif return_time_difference(time_conversation) > 30 and bool_timeline[3]:
                         st.sidebar.subheader("Previous 30 days's conversations")
                         bool_timeline[3] = False
 
                     # We display title and subtitle on two separate rows in the button
                     if st.sidebar.button(f"{title}", key=i):
-                        # Do something when the button is clicked
+                        # Upload the conversation when the button is clicked
                         st.session_state.messages = return_conversation(conversation)
                         st.session_state.first_question = True
                         
@@ -415,6 +425,29 @@ if st.session_state.login or st.session_state.without_loggin_button:
                 upload_bug_to_s3(S3_BUCKET_NAME, str(e))
                 container = st.sidebar.container()
                 container.error("Reload the page to see the previous conversations")
+
+    elif st.session_state.without_loggin_button:
+
+        # We count the number of conversations started
+        nb_conversations = len(st.session_state.history_messages)
+        
+        # Show previous conversations if more than 1 started
+        if nb_conversations > 1:
+            st.sidebar.markdown("---")
+            st.sidebar.subheader("Previous conversations")  
+            st.sidebar.markdown("---")
+
+            # We read from the most recent to oldest
+            for i, conversation in enumerate(st.session_state.history_messages[::-1]):
+                # Each text is visible as a button
+                if conversation:
+                    title = conversation[0]['content']
+
+                    # We display title and subtitle on two separate rows in the button
+                    if st.sidebar.button(f"{title}", key=i):
+                        # Upload the conversation when the button is clicked
+                        st.session_state.messages = st.session_state.history_messages[nb_conversations -1 - i]
+                        st.session_state.first_question = True
 
     # Start with empty messages, stored in session state
     if 'messages' not in st.session_state:
@@ -484,7 +517,10 @@ if st.session_state.login or st.session_state.without_loggin_button:
            # Write the final answer without the cursor
            response_placeholder.markdown(answer)
 
-           # If user consent to logging
+           # We update and store the conversation
+           st.session_state.history_messages[-1] = st.session_state.messages
+
+           # If user consented to logging
            if st.session_state.compliance_statut:
                 # S3 bucket details for logging folder
                 if st.session_state.login:
@@ -495,8 +531,9 @@ if st.session_state.login or st.session_state.without_loggin_button:
                     s3_key = f'logs/conversations/visitors/{st.session_state.user_id}.json'
                     check_number = False
 
+                # We modify the stock_message with the new question/answer
                 append_to_logs(st.session_state.stock_messages, question, answer, 
-                               engine_AI, answer_AI_persona, answer_AI_type)
+                               engine_AI, answer_AI_persona)
         
                 upload_to_s3(S3_BUCKET_NAME, s3_key, st.session_state.stock_messages, check_number, st.session_state.new_conversation)
                 

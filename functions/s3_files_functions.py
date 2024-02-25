@@ -32,14 +32,13 @@ def upload_bug_to_s3(bucket_name, error):
     s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(error))
 
 # Function to append a new question/answer to the logs and the informations on the selected bot
-def append_to_logs(logs, user, chatbot, engine, ai_persona, ai_type_answer):
+def append_to_logs(stock_messages, user, chatbot, engine, ai_persona):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    logs.append({'timestamp': timestamp, 
+    stock_messages.append({'timestamp': timestamp, 
                  'user': user, 
                  'chatbot': chatbot, 
                  'engine': engine,
-                 'persona': ai_persona,
-                 'type_answer':ai_type_answer})
+                 'persona': ai_persona})
     
 def loading_s3_conversations(bucket_name, user_key):
     s3 = boto3.client('s3')
@@ -47,6 +46,7 @@ def loading_s3_conversations(bucket_name, user_key):
     list_s3 = s3.list_objects_v2(Bucket=bucket_name, Prefix=f'{user_key}/')
     # We get the number of files in the folder with the key KeyCount
     len_list_s3 = list_s3['KeyCount']
+    # To store the conversations
     conversation_list = []
     if len_list_s3 > 0:
         for i in range(1, len_list_s3 + 1):
