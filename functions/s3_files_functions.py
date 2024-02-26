@@ -24,12 +24,38 @@ def upload_to_s3(bucket_name, key, data, check_number = False, new_conversation 
     
     s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(data))
 
-# Function to upload logs to S3 bucket
+# Function to upload bugs to S3 bucket
 def upload_bug_to_s3(bucket_name, error):
     s3 = boto3.client('s3')
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     key = f'logs/errors/{timestamp}.json'
     s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(error))
+
+# Function to upload authorization for forgotten password to S3 bucket
+def upload_reset_pwd_to_s3(bucket_name, email, token):
+    s3 = boto3.client('s3')
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    data = {'email':email, 'token':token, 'timestamp':timestamp}
+    key = f'authorized_changes/modification_pwd.json'
+    s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(data))
+
+# Function to retrieve the content of the authorized email/token to reinitialize the pwd
+def retrieve_authorized_pwd_change(bucket_name):
+    try:
+        s3 = boto3.client('s3')
+        key = f'authorized_changes/modification_pwd.json'
+        response = s3.get_object(Bucket=bucket_name, Key=key)
+        file_content = response['Body'].read().decode('utf-8')
+        file_content = json.loads(file_content)
+        authorized_emails = file_content['email']
+        authorized_token = file_content['token']
+        authorized_timestamp = file_content['timestamp']
+
+        return authorized_emails, authorized_token, authorized_timestamp
+
+    except Exception as e:
+        print(e)
+        return None, None, None
 
 # Function to append a new question/answer to the logs and the informations on the selected bot
 def append_to_logs(stock_messages, user, chatbot, engine, ai_persona):
@@ -78,7 +104,7 @@ def return_dates(conversations):
         dates.append(date['timestamp'])
     return dates
 
-def return_time_difference(timestamp_str):
+def return_time_difference(timestamp_str, delta):
     # Convert the timestamp string to a datetime object
     timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
 
@@ -88,7 +114,12 @@ def return_time_difference(timestamp_str):
     # Calculate the time difference
     time_difference = current_time - timestamp
 
-    # Transform to days
-    days_difference = time_difference.days
+    # Return the delta based on the input
+    if delta == 'days':
+        delta_difference = time_difference.days
+    elif delta == 'minutes':
+        delta_difference = time_difference.total_seconds() / 60
+    else:
+        raise ValueError("Invalid delta parameter. Use 'days' or 'minutes'.")
 
-    return days_difference
+    return delta_difference

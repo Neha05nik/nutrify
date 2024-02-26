@@ -42,22 +42,22 @@ def loading_conversation_history():
                 time_conversation = return_dates(conversation)[0]
 
                 # If the conversation is today's old
-                if return_time_difference(time_conversation) == 0 and bool_timeline[0]:
+                if return_time_difference(time_conversation, "days") == 0 and bool_timeline[0]:
                     st.sidebar.subheader("Today's conversations")  
                     bool_timeline[0] = False
 
                 # If the conversation is one days' old
-                elif return_time_difference(time_conversation) == 1 and bool_timeline[1]:
+                elif return_time_difference(time_conversation, "days") == 1 and bool_timeline[1]:
                     st.sidebar.subheader("Yesterday's conversations")
                     bool_timeline[1] = False
 
                 # If the conversation is seven days' old
-                elif return_time_difference(time_conversation) > 1 and return_time_difference(time_conversation) <= 30 and bool_timeline[2]:
+                elif return_time_difference(time_conversation, "days") > 1 and return_time_difference(time_conversation, "days") <= 30 and bool_timeline[2]:
                     st.sidebar.subheader("Previous 7 days's conversations")
                     bool_timeline[2] = False
                 
                 # If the conversation is thirty days' old
-                elif return_time_difference(time_conversation) > 30 and bool_timeline[3]:
+                elif return_time_difference(time_conversation, "days") > 30 and bool_timeline[3]:
                     st.sidebar.subheader("Previous 30 days's conversations")
                     bool_timeline[3] = False
 

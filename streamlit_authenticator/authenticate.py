@@ -166,7 +166,6 @@ class Authenticate:
             try:
                 if self._check_pw():
                     if inplace:
-                        #st.session_state['name'] = self.credentials['usernames'][self.username]['name']
                         self.exp_date = self._set_exp_date()
                         self.token = self._token_encode()
                         self.cookie_manager.set(self.cookie_name, self.token,
@@ -304,7 +303,7 @@ class Authenticate:
         """
         self.credentials['emails'][email]['password'] = Hasher([password]).generate()[0]
 
-    def reset_password(self, email: str, location: str='main', fields: dict={'Form name':'Reset password', 
+    def reset_password(self, email: str, login: bool=True, location: str='main', fields: dict={'Form name':'Reset password', 
                                                                                 'Current password':'Current password', 
                                                                                 'New password':'New password',
                                                                                 'Repeat password':'Repeat password',
@@ -339,7 +338,10 @@ class Authenticate:
         
         reset_password_form.subheader('Reset password' if 'Form name' not in fields else fields['Form name'])
         self.email = email.lower()
-        self.password = reset_password_form.text_input('Current password' if 'Current password' not in fields else fields['Current password'], 
+
+        # Only if user is login
+        if login:
+            self.password = reset_password_form.text_input('Current password' if 'Current password' not in fields else fields['Current password'], 
                                                        type='password')
         new_password = reset_password_form.text_input('New password' if 'New password' not in fields else fields['New password'], 
                                                       type='password')
@@ -347,16 +349,20 @@ class Authenticate:
                                                              type='password')
 
         if reset_password_form.form_submit_button('Reset' if 'Reset' not in fields else fields['Reset']):
-            if self._check_credentials(inplace=False):
+            if self._check_credentials(inplace=False) or ((email in self.credentials['emails']) and (login == False)):
                 if len(new_password) == 0:
                     raise ResetError('No new password provided')
                 if new_password != new_password_repeat:
                     raise ResetError('Passwords do not match')
-                if self.password != new_password: 
-                    self._update_password(self.email, new_password)
-                    return True
+                if login:
+                    if self.password != new_password: 
+                        self._update_password(self.email, new_password)
+                        return True
+                    else:
+                        raise ResetError('New and current passwords are the same')     
                 else:
-                    raise ResetError('New and current passwords are the same')                                            
+                     self._update_password(email, new_password)    
+                     return True                        
             else:
                 raise CredentialsError('password')
     
@@ -488,7 +494,7 @@ class Authenticate:
         self.credentials['emails'][email]['password'] = Hasher([self.random_password]).generate()[0]
         return self.random_password
 
-    def forgot_password(self, location: str='main', fields: dict={'Form name':'Forgot password', 
+    def forgot_password(self, reset_pwd, location: str='main', fields: dict={'Form name':'Forgot password', 
                                                                   'Email':'Email', 
                                                                   'Submit':'Submit'}, ) -> tuple:
         """
@@ -496,6 +502,8 @@ class Authenticate:
 
         Parameters
         ----------
+        reset_pwd: bool
+            True or False for reseting the password
         location: str
             The location of the forgot password widget i.e. main or sidebar.
         fields: dict
@@ -526,7 +534,10 @@ class Authenticate:
         if forgot_password_form.form_submit_button('Submit' if 'Submit' not in fields else fields['Submit']):
             if len(email) > 0:
                 if email in self.credentials['emails']:
-                    return email, self._set_random_password(email)
+                    if reset_pwd:
+                        return email, self._set_random_password(email)
+                    else: 
+                        return email, None
                 else:
                     return False, None
             else:

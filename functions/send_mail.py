@@ -1,16 +1,19 @@
-# To send the reset password
+# To send a link to reset the password
 import streamlit as st
+import secrets
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from functions.s3_files_functions import upload_reset_pwd_to_s3
 
 try:
     SITE_EMAIL = st.secrets["SITE_EMAIL"]
     PASSWORD_EMAIL = st.secrets["PASSWORD_EMAIL"]
+    S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
 except Exception as e:
     print(e)
 
-def send_email(to_email, new_password):
+def send_email(to_email):
     # Set up the email server
     smtp_server = 'smtp.gmail.com:587'  
     sender_email = SITE_EMAIL
@@ -20,10 +23,21 @@ def send_email(to_email, new_password):
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = to_email
-    msg['Subject'] = 'Your New Password'
+    msg['Subject'] = 'Reset your Password'
 
-    # Attach the new password to the email body
-    body = f'Your new password is: {new_password}'
+    # Generate a random token with 32 characters
+    random_token = secrets.token_hex(16)
+
+    upload_reset_pwd_to_s3(S3_BUCKET_NAME, to_email, random_token)
+
+    body = f"""
+        Click on the link to change your password.
+
+        The link will expire in 5 minutes.
+
+        http://localhost:8501/?email={to_email}&token={random_token}
+    """
+
     msg.attach(MIMEText(body, 'plain'))
 
     # Connect to the SMTP server and send the email

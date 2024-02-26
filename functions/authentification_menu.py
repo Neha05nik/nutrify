@@ -9,6 +9,21 @@ from functions.s3_files_functions import *
 
 S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
 
+@st.cache_data()
+def check_reset_password_auth(email, token):
+
+    # we retrieve the authorized account that can change it's password
+    # For now, only one account
+    authorized_emails, authorized_token, authorized_timestamp = retrieve_authorized_pwd_change(S3_BUCKET_NAME)
+
+    # We check if the email and token are corrects
+    if email == authorized_emails and token == authorized_token:
+        # We check that the timestamp is not expired
+        if return_time_difference(authorized_timestamp, "minutes") <= 5:
+            return True
+        else:
+            return False
+
 def get_authentification_menu():
 
     # We are loading the authenticator object and the config from the S3
@@ -19,8 +34,6 @@ def get_authentification_menu():
 
     for init_b in init_buttons:
         st.session_state[init_b] = st.session_state.get(init_b, False)
-        #if init_b not in st.session_state:
-         #   st.session_state[init_b] = False
 
     # Just to show that the registration worked
     if st.session_state.successful_registration:
@@ -29,13 +42,22 @@ def get_authentification_menu():
 
     # Just to show that the new password was sent
     if st.session_state.successful_forgotten_pwd:
-        st.success('New password sent to your email')
+        st.success('Link to reset password sent to your email')
         st.session_state.successful_forgotten_pwd = False
 
     # Just to show that the password was successfully modified
     if st.session_state.successful_reset_pwd:
         st.success('Password modified successfully')
         st.session_state.successful_reset_pwd = False
+        # To clear the url link
+        st.query_params.clear()
+
+    # Get the URL parameters
+    params = st.query_params.to_dict()
+
+    # Retrieve the token and email from url 
+    email = params.get("email", "")
+    token = params.get("token", "")
 
     # Show buttons before being logging or before "continue without logging" 
     bool_logging = not st.session_state.login and not st.session_state.without_loggin_button
@@ -238,15 +260,15 @@ def get_authentification_menu():
     elif st.session_state.forgot_pwd_button:
         try:
             # We ask for the email used in the registration
-            email_of_forgotten_password, new_random_password = authenticator.forgot_password()
+            email_of_forgotten_password, _ = authenticator.forgot_password(reset_pwd = False)
             # If we have a successful email
             if email_of_forgotten_password:
-                send_email(email_of_forgotten_password, new_random_password)
-                st.session_state.password = new_random_password
-                saving_configs(config, "nutritional_ai/config.yaml")
+                send_email(email_of_forgotten_password)
 
                 # Just to show that the new password was sent
                 st.session_state.successful_forgotten_pwd = True
+
+                st.rerun()
 
             elif email_of_forgotten_password == False:
                 st.error('Email not found')
@@ -254,6 +276,21 @@ def get_authentification_menu():
         except Exception as e:
             st.error(e)
 
+    # Resetting password after getting the email.
+    elif check_reset_password_auth(email, token): 
+        try:
+            # Return true when password is correctly change
+            password_of_registered_user = authenticator.reset_password(email, login = False)
+            if password_of_registered_user:
+                st.session_state.reset_pwd = False
+                # We write the new user informations
+                saving_configs(config, "nutritional_ai/config.yaml")
+
+                st.session_state.successful_reset_pwd = True
+
+                st.rerun()
+        except Exception as e:
+            st.error(e)
 
     # To display the compliance message True: accepted/ False: Refused
     if st.session_state.compliance_message_bool:
