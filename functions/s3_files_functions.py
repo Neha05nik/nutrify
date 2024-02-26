@@ -31,31 +31,46 @@ def upload_bug_to_s3(bucket_name, error):
     key = f'logs/errors/{timestamp}.json'
     s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(error))
 
-# Function to upload authorization for forgotten password to S3 bucket
-def upload_reset_pwd_to_s3(bucket_name, email, token):
-    s3 = boto3.client('s3')
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    data = {'email':email, 'token':token, 'timestamp':timestamp}
-    key = f'authorized_changes/modification_pwd.json'
-    s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(data))
-
 # Function to retrieve the content of the authorized email/token to reinitialize the pwd
-def retrieve_authorized_pwd_change(bucket_name):
-    try:
+def retrieve_authorized_pwd_change(bucket, key):
+    try :
         s3 = boto3.client('s3')
-        key = f'authorized_changes/modification_pwd.json'
-        response = s3.get_object(Bucket=bucket_name, Key=key)
+        
+        response = s3.get_object(Bucket=bucket, Key=key)
+        
         file_content = response['Body'].read().decode('utf-8')
+        
         file_content = json.loads(file_content)
-        authorized_emails = file_content['email']
-        authorized_token = file_content['token']
-        authorized_timestamp = file_content['timestamp']
-
-        return authorized_emails, authorized_token, authorized_timestamp
-
+        
+        return file_content
+    
     except Exception as e:
         print(e)
-        return None, None, None
+        return {}
+
+# Function to upload authorization for forgotten password to S3 bucket
+def upload_reset_pwd_to_s3(bucket, key, email, token):
+    s3 = boto3.client('s3')
+
+    # Retrieve the file content
+    file_content = retrieve_authorized_pwd_change(bucket, key)
+    
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    data = {
+            email: 
+                {
+                    'token':token, 
+                    'timestamp':timestamp
+                }
+            }
+    
+    # Update the json file
+    # Replace the previous token and timestamp if the user already asked for it.
+    file_content.update(data)
+    
+    # We upload the file on S3
+    s3.put_object(Bucket='nutritious.app', Key=key, Body=json.dumps(file_content))
 
 # Function to append a new question/answer to the logs and the informations on the selected bot
 def append_to_logs(stock_messages, user, chatbot, engine, ai_persona):

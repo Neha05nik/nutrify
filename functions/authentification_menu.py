@@ -12,14 +12,15 @@ S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
 @st.cache_data()
 def check_reset_password_auth(email, token):
 
-    # we retrieve the authorized account that can change it's password
-    # For now, only one account
-    authorized_emails, authorized_token, authorized_timestamp = retrieve_authorized_pwd_change(S3_BUCKET_NAME)
+    # we retrieve the authorized accounts that can change their passwords
+    file_content = retrieve_authorized_pwd_change(S3_BUCKET_NAME, 'authorized_changes/modification_pwd.json')
 
-    # We check if the email and token are corrects
-    if email == authorized_emails and token == authorized_token:
+    authorized_emails = [email for email in file_content]
+
+    # We check if the email in the authorized_emails and if the token match
+    if email in authorized_emails and token == file_content[email]['token']:
         # We check that the timestamp is not expired
-        if return_time_difference(authorized_timestamp, "minutes") <= 5:
+        if return_time_difference(file_content[email]['timestamp'], "minutes") <= 5:
             return True
         else:
             return False

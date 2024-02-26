@@ -28,13 +28,14 @@ def send_email(to_email):
     # Generate a random token with 32 characters
     random_token = secrets.token_hex(16)
 
-    upload_reset_pwd_to_s3(S3_BUCKET_NAME, to_email, random_token)
+    upload_reset_pwd_to_s3(S3_BUCKET_NAME, 'authorized_changes/modification_pwd.json', 
+                              to_email, random_token)
 
     body = f"""
         Click on the link to change your password.
 
         The link will expire in 5 minutes.
-
+        
         https://nutritional-chatbox.streamlit.app/?email={to_email}&token={random_token}
     """
 
