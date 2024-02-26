@@ -35,7 +35,7 @@ def send_email(to_email):
 
         The link will expire in 5 minutes.
 
-        http://localhost:8501/?email={to_email}&token={random_token}
+        https://nutritional-chatbox.streamlit.app/?email={to_email}&token={random_token}
     """
 
     msg.attach(MIMEText(body, 'plain'))
