@@ -34,14 +34,14 @@ def load_OpenAI_GPT4():
 # Cache Mistral Chat Model tiny for future runs
 @st.cache_resource()
 def load_Mistral_TINY():
-   return ChatMistralAI(model='mistral-tiny', 
+   return ChatMistralAI(model='mistral-tiny-2312', 
                         temperature=0.4,
                         mistral_api_key=MISTRAL_API_KEY)
 
 # Cache Mistral Chat Model small for future runs
 @st.cache_resource()
 def load_Mistral_SMALL():
-   return ChatMistralAI(model='mistral-small', 
+   return ChatMistralAI(model='mistral-small-2312', 
                         temperature=0.4,
                         mistral_api_key=MISTRAL_API_KEY)
 
