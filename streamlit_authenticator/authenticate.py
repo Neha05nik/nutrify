@@ -260,12 +260,12 @@ class Authenticate:
         """
         Clears cookie and session state variables associated with the logged in user.
         """
-        #self.cookie_manager.delete(self.cookie_name)
-        self.credentials['emails'][st.session_state['email']]['logged_in'] = False
-        st.session_state['logout'] = True
-        st.session_state['authentication_status'] = None
+        self.cookie_manager.delete(self.cookie_name)
+        #self.credentials['emails'][st.session_state['email']]['logged_in'] = False
+        #st.session_state['logout'] = True
+        #st.session_state['authentication_status'] = None
 
-    def logout(self, button_name: str='Logout', location: str='main', key: Optional[str]=None):
+    def logout(self, button_name: str='**Logout**', location: str='main', key: Optional[str]=None):
         """
         Creates a logout button.
 

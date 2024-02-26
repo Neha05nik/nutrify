@@ -8,7 +8,7 @@ try:
 except:
     print("Error loading qr_image")
 
-def loading_sidebar_menu():
+def loading_sidebar_menu(authenticator):
     engine_AI = st.sidebar.radio('**Powered by:**',["Mistral-7B-v0.2", "gpt-3.5-turbo"], help="Mistral-7B-v0.2 is a more powerful model than GPT-3.5")
     
     answer_AI_persona = st.sidebar.radio('**Nutrional_AI persona:**',["Normal", "Scientific", "Nutritional coach"], 
@@ -61,6 +61,7 @@ def loading_sidebar_menu():
 
     # Logout from account
     if st.sidebar.button("**Log out**"):
+        authenticator._implement_logout()
         # Restart the parameters for loging in or Signing in 
         st.session_state.login = False
         st.session_state.register = False

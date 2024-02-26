@@ -20,7 +20,7 @@ for auth_buttons in authentification_buttons:
     st.session_state[auth_buttons] = st.session_state.get(auth_buttons, False)
 
 # Generation the authentification menu (Logging, registration, continue without logging)
-get_authentification_menu()
+authenticator = get_authentification_menu()
 
 # When connected via login or without loggin
 if st.session_state.login or st.session_state.without_loggin_button:
@@ -37,7 +37,7 @@ if st.session_state.login or st.session_state.without_loggin_button:
     st.session_state.memory_questions = st.session_state.get('memory_questions', '')
 
     # We load the sidebar buttons 
-    engine_AI, answer_AI_persona, language_AI, citing_sources_AI, nb_article = loading_sidebar_menu()
+    engine_AI, answer_AI_persona, language_AI, citing_sources_AI, nb_article = loading_sidebar_menu(authenticator)
 
     # We load the conversation history 
     loading_conversation_history()

@@ -305,3 +305,5 @@ def get_authentification_menu():
 
         get_compliance_message(compliance_statut)
 
+    return authenticator
+
