@@ -1,5 +1,6 @@
 import streamlit as st
 from functions.loading_examples_questions import random_questions
+from functions.s3_files_functions import generate_random_number
 
 try:
     QRCODE = st.secrets["QRCODE"]
