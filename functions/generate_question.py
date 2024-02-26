@@ -6,12 +6,14 @@ def get_openAI_requery(question, previous_questions):
         content = f"""
             # Question:
             "{question}"
-            Given the above question, rephrase and expand it to help you do better answering.
+            I just want you to rephrase and expand the above question to help you do better answering.
+
             # Previous questions:
             <{previous_questions}>
-            You can use the previous questions to better understand the question.
+            You can use the previous questions to have a better context behind the question.
+            
             Maintain all information in the original question.
-            Only write the rephrased question and in english.
+            I just want you to return the rephrased question and in english. 
             YOUR ANSWER:
         """
 
