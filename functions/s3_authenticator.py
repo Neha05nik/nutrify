@@ -6,9 +6,9 @@ from yaml.loader import SafeLoader
 import os
 
 try:
-    S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
+    S3_BUCKET  = st.secrets["S3_BUCKET"]
 except:
-    S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
+    S3_BUCKET = os.environ.get('S3_BUCKET')
 
 # Function to load authenticator from S3 bucket
 def loading_authenticator(key):
