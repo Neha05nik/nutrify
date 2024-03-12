@@ -1,10 +1,16 @@
 import streamlit as st
 from functions.loading_examples_questions import random_questions
 from functions.s3_files_functions import generate_random_number
+import os
 
 try:
-    QRCODE = st.secrets["QRCODE"]
-    QRCODE_LINK = st.secrets["QRCODE_LINK"]
+    try:
+        QRCODE = st.secrets["QRCODE"]
+        QRCODE_LINK = st.secrets["QRCODE_LINK"]
+    except:
+        QRCODE = os.environ.get('QRCODE')
+        QRCODE_LINK = os.environ.get('QRCODE_LINK')
+
 except:
     print("Error loading qr_image")
 

@@ -1,15 +1,14 @@
 import boto3
 import streamlit_authenticator as stauth
 import yaml
-import json
-import io
 import streamlit as st
 from yaml.loader import SafeLoader
+import os
 
 try:
-    S3_BUCKET = st.secrets["S3_BUCKET"]
-except Exception as e:
-    print(e)
+    S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
+except:
+    S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 
 # Function to load authenticator from S3 bucket
 def loading_authenticator(key):

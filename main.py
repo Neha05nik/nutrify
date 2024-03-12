@@ -9,8 +9,12 @@ from functions.loading_examples_questions import random_questions
 from functions.loading_history import loading_conversation_history
 from functions.authentification_menu import get_authentification_menu
 from functions.logged_sidebar_menu import loading_sidebar_menu
+import os
 
-S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
+try:
+    S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
+except:
+    S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 
 # We check the parameters in the st.session_state
 authentification_buttons = ["login", "login_button", "register", "sign_up_button", "reset_pwd",

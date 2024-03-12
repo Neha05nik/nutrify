@@ -1,7 +1,11 @@
 import streamlit as st
 from functions.s3_files_functions import *
+import os
 
-S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
+try:
+    S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
+except:
+    S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 
 def loading_conversation_history():
     # Archived conversations 

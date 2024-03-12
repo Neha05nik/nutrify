@@ -5,13 +5,16 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from functions.s3_files_functions import upload_reset_pwd_to_s3
+import os
 
 try:
     SITE_EMAIL = st.secrets["SITE_EMAIL"]
     PASSWORD_EMAIL = st.secrets["PASSWORD_EMAIL"]
     S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
-except Exception as e:
-    print(e)
+except:
+    SITE_EMAIL = os.environ.get('SITE_EMAIL')
+    PASSWORD_EMAIL = os.environ.get('PASSWORD_EMAIL')
+    S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 
 def send_email(to_email):
     # Set up the email server
