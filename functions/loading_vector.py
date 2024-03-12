@@ -1,24 +1,12 @@
 import streamlit as st
-import os
+from functions.others import get_env
 
-try:
-    try:
-        ASTRA_API_ENDPOINT = st.secrets["ASTRA_API_ENDPOINT"]
-        ASTRA_TOKEN = st.secrets["ASTRA_TOKEN"]
-        HF_API_KEY = st.secrets["HF_API_KEY"]
-        ASTRA_COLLECTION_384  =  st.secrets["ASTRA_COLLECTION_384"]
-        ASTRA_COLLECTION_1024  =  st.secrets["ASTRA_COLLECTION_1024"]
-        VOYAGE_API_KEY = st.secrets["VOYAGE_API_KEY"]
-    except:
-        ASTRA_API_ENDPOINT = os.environ.get('ASTRA_API_ENDPOINT')
-        HF_API_KEY = os.environ.get('HF_API_KEY')
-        ASTRA_TOKEN = os.environ.get('ASTRA_TOKEN')
-        ASTRA_COLLECTION_384 = os.environ.get('ASTRA_COLLECTION_384')
-        ASTRA_COLLECTION_1024 = os.environ.get('ASTRA_COLLECTION_1024')
-        VOYAGE_API_KEY = os.environ.get('VOYAGE_API_KEY')
-
-except Exception as e:
-    print(e)
+ASTRA_API_ENDPOINT = get_env("ASTRA_API_ENDPOINT")
+ASTRA_TOKEN = get_env("ASTRA_TOKEN")
+HF_API_KEY  =  get_env("HF_API_KEY")
+ASTRA_COLLECTION_384 = get_env("ASTRA_COLLECTION_384")
+ASTRA_COLLECTION_1024 = get_env("ASTRA_COLLECTION_1024")
+VOYAGE_API_KEY = get_env("VOYAGE_API_KEY")
 
 # Cache the Astra DB Vector Store for future runs
 @st.cache_resource(show_spinner='Loading of the database')

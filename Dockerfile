@@ -10,16 +10,17 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    software-properties-common \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+# We copy the requirements file
+COPY ./requirements.txt /app/requirements.txt
 
-RUN git clone https://github.com/RubenHf/RAG_Scientific_Article.git .
+# We upgrade pip
+RUN pip install --upgrade pip
 
-RUN pip install -r requirements.txt
+# We install the dependancies
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+
+# Copy the source code into the container 
+COPY . /app
 
 EXPOSE 8501
 

@@ -1,11 +1,7 @@
 import cohere
-import streamlit as st
-import os
+from functions.others import get_env
 
-try:
-    COHERENCE_API_KEY = st.secrets["COHERENCE_API_KEY"]
-except: 
-    COHERENCE_API_KEY = os.environ.get("COHERENCE_API_KEY")
+COHERENCE_API_KEY = get_env("COHERENCE_API_KEY")
 
 def small_to_big(collection, documents):
     """

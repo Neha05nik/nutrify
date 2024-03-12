@@ -1,20 +1,11 @@
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_mistralai.chat_models import ChatMistralAI
-import os
+from functions.others import get_env
 
-try:
-    try:
-        OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-        HF_API_KEY = st.secrets["HF_API_KEY"]
-        MISTRAL_API_KEY  =  st.secrets["MISTRAL_API_KEY"]
-    except:
-        OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-        HF_API_KEY = os.environ.get('HF_API_KEY')
-        MISTRAL_API_KEY = os.environ.get('MISTRAL_API_KEY')
-
-except Exception as e:
-    print(e)
+OPENAI_API_KEY = get_env("OPENAI_API_KEY")
+HF_API_KEY = get_env("HF_API_KEY")
+MISTRAL_API_KEY  =  get_env("MISTRAL_API_KEY")
 
 # Cache OpenAI Chat Model 3.5 for future runs
 @st.cache_resource()

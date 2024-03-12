@@ -6,13 +6,9 @@ from streamlit_modal import Modal
 from functions.gdpr_compliance import run_compliance_modal, get_compliance_message
 from functions.s3_authenticator import loading_authenticator, saving_configs
 from functions.s3_files_functions import *
+from functions.others import get_env
 
-import os
-
-try:
-    S3_BUCKET_NAME  = st.secrets["S3_BUCKET"]
-except:
-    S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
+S3_BUCKET_NAME = get_env("S3_BUCKET")
 
 @st.cache_data()
 def check_reset_password_auth(email, token):

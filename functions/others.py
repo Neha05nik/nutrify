@@ -1,5 +1,18 @@
 import os
 import tempfile
+import streamlit as st
+
+# Function to return env variable from os or streamlit secrets
+def get_env(key):
+    
+    env = os.environ.get(key)
+    
+    # Search in streamlit
+    if env == None:
+        env = st.secrets[key]
+
+    return env
+    
 
 # Function for Vectorizing uploaded data into Astra DB
 def vectorize_text(uploaded_file, vector_store):
@@ -30,3 +43,5 @@ def vectorize_text(uploaded_file, vector_store):
        pages = text_splitter.split_documents(docs)
        vector_store.add_documents(pages) 
        st.info(f"{len(pages)} pages loaded.")
+
+

@@ -1,21 +1,17 @@
 import boto3
 import streamlit_authenticator as stauth
 import yaml
-import streamlit as st
 from yaml.loader import SafeLoader
-import os
+from functions.others import get_env
 
-try:
-    S3_BUCKET  = st.secrets["S3_BUCKET"]
-except:
-    S3_BUCKET = os.environ.get('S3_BUCKET')
+S3_BUCKET_NAME = get_env("S3_BUCKET")
 
 # Function to load authenticator from S3 bucket
 def loading_authenticator(key):
     s3 = boto3.client('s3')
 
     # Download config.yaml from S3 bucket
-    response = s3.get_object(Bucket=S3_BUCKET, Key=key)
+    response = s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)
     contents = response['Body'].read().decode("utf-8")
 
     # Load the config from the file-like object
@@ -39,4 +35,4 @@ def saving_configs(config, key):
     yaml_string = yaml.dump(config, default_flow_style=False)
 
     # Upload config.yaml to S3 bucket
-    s3.put_object(Body=yaml_string.encode('utf-8'), Bucket=S3_BUCKET, Key=key)
+    s3.put_object(Body=yaml_string.encode('utf-8'), Bucket=S3_BUCKET_NAME, Key=key)
